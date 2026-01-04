@@ -4,14 +4,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>changjurhee's blog</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tags {
+            color: #666;
+            font-size: 1em;
+            line-height: 2;
+            margin-bottom: 30px;
+        }
+        
+        .tags a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        
+        .tags a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .badge-container {
+            margin-top: 30px;
+        }
+        
+        .badge-container img {
+            transition: transform 0.3s ease;
+            border-radius: 10px;
+        }
+        
+        .badge-container img:hover {
+            transform: scale(1.05);
+        }
+        
+        .copyright {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
 <body>
-    <h1>Luke, Use the Source</h1>
-    
-    <p>#신지, #최진실, #질투, #AlphaGo, #RL, #Rust, #Cpp, #Algorithm</p>
-    
-    <a href="https://solved.ac/changjurhee">
-        <img src="http://mazassumnida.wtf/api/v2/generate_badge?boj=changjurhee" alt="Solved.ac Profile">
-    </a>
+    <div class="container">
+        <h1>🚀 Luke, Use the Source</h1>
+        
+        <div class="tags">
+            <p>
+                <a href="https://namu.wiki/w/%EC%8B%A0%EC%A7%80" target="_blank">#신지</a>
+                <a href="https://namu.wiki/w/%EC%B5%9C%EC%A7%84%EC%8B%A4" target="_blank">#최진실</a>
+                <a href="https://namu.wiki/w/%EC%A7%88%ED%88%AC" target="_blank">#질투</a>
+                <a href="https://deepmind.google/technologies/alphago/" target="_blank">#AlphaGo</a>
+                <a href="https://en.wikipedia.org/wiki/Reinforcement_learning" target="_blank">#RL</a>
+                <a href="https://www.rust-lang.org/" target="_blank">#Rust</a>
+                <a href="https://cplusplus.com/" target="_blank">#Cpp</a>
+                <a href="https://en.wikipedia.org/wiki/Algorithm" target="_blank">#Algorithm</a>
+                <a href="https://www.blender.org/" target="_blank">#blender</a>
+                <a href="https://www.boost.org/" target="_blank">#boost</a>
+            </p>
+        </div>
+        
+        <div class="badge-container">
+            <a href="https://solved.ac/changjurhee">
+                <img src="http://mazassumnida.wtf/api/v2/generate_badge?boj=changjurhee" alt="Solved.ac Profile">
+            </a>
+        </div>
+        
+        <div class="copyright">
+            <p>Copyright © changju.rhee since 2012</p>
+        </div>
+    </div>
 </body>
 </html>
