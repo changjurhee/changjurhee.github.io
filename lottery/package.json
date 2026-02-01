@@ -1,0 +1,11 @@
+{
+    "name": "lottery-generator",
+    "version": "1.7.0",
+    "description": "Lotto 6/45 Generator with AI/RL",
+    "scripts": {
+        "test": "jest"
+    },
+    "devDependencies": {
+        "jest": "^29.7.0"
+    }
+}

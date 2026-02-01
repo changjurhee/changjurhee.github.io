@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotto 6/45 Generator</title>
+    <link rel="stylesheet" href="style.css?v=6">
+</head>
+
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <button id="settings-btn" class="sidebar-btn" title="Settings">⚙️</button>
+                <button id="sidebar-close" class="sidebar-btn" style="margin-left: auto;">«</button>
+            </div>
+            <div class="controls">
+                <div class="options">
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="algorithm" value="random" checked>
+                            <span class="radio-label">Pure Random 🎲</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="algorithm" value="weighted">
+                            <span class="radio-label">Frequency (Weighted) 📊</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="algorithm" value="adaptive">
+                            <span class="radio-label">Trend (Adaptive) 📈</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="algorithm" value="non-frequency">
+                            <span class="radio-label">Non-Frequency (Cold) ❄️</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="algorithm" value="sequential">
+                            <span class="radio-label">Sequential (AI/RL) 🤖</span>
+                        </label>
+                        <div id="ai-training-panel" class="hidden"
+                            style="margin-top: 10px; padding: 10px; background: #e17055; border-radius: 8px; color: white;">
+                            <div style="font-size: 0.9rem; margin-bottom: 5px;">Deep Learning Model</div>
+                            <button id="train-ai-btn"
+                                style="width: 100%; padding: 5px; border: none; border-radius: 4px; background: white; color: #d63031; font-weight: bold; cursor: pointer; margin-bottom: 5px;">Train
+                                Model 🧠</button>
+                            <button id="sim-train-btn"
+                                style="width: 100%; padding: 5px; border: none; border-radius: 4px; background: #ffeaa7; color: #d63031; font-weight: bold; cursor: pointer;">Simulate
+                                & Train (2000x) 🌪️</button>
+                            <div id="training-progress" class="hidden" style="margin-top: 5px; font-size: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Loss: <span id="ai-loss">0.00</span></span>
+                                    <span>Epoch: <span id="ai-epoch">0</span></span>
+                                </div>
+                                <div
+                                    style="width: 100%; height: 4px; background: rgba(255,255,255,0.3); margin-top: 3px; border-radius: 2px;">
+                                    <div id="ai-bar"
+                                        style="width: 0%; height: 100%; background: white; border-radius: 2px; transition: width 0.2s;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="options">
+                    <h3>RNG Source 🎲</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="rng" value="prng" checked>
+                            <span class="radio-label">Basic PRNG (Fast)</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="rng" value="secure">
+                            <span class="radio-label">Secure (Web Crypto) 🔒</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="rng" value="vrf">
+                            <span class="radio-label">VRF (Simulated) 🔑</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="rng" value="blockchain">
+                            <span class="radio-label">Blockchain (Bitcoin) ₿</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <button id="start-btn">Generate Numbers</button>
+            <div id="app-version" style="text-align: center; margin-top: 10px; color: #b2bec3; font-size: 0.8rem;">
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="header-left">
+                    <button id="sidebar-open" class="sidebar-btn hidden">»</button>
+                    <h1>🎰 Lotto 6/45</h1>
+                </div>
+                <button id="reset-btn" class="hidden">Reset</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="main-view">Main View 📊</button>
+                <button class="tab-btn" data-tab="history-view">History View 📜</button>
+                <button class="tab-btn" data-tab="winning-history-view">Winning History 🏆</button>
+                <button class="tab-btn" data-tab="simulation-view">Simulation ⚙️</button>
+            </div>
+
+            <div id="main-view" class="tab-content active">
+                <div class="chart-container">
+                    <canvas id="frequencyChart"></canvas>
+                </div>
+                <div id="ball-container" class="ball-container">
+                    <!-- Balls will be added here -->
+                </div>
+            </div>
+
+            <div id="history-view" class="tab-content">
+                <div class="history-section">
+                    <h3>Generation History 📜</h3>
+                    <div id="history-log">
+                        <!-- History items will be added here -->
+                        <div class="history-placeholder">No history yet. Generate some numbers!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="winning-history-view" class="tab-content">
+                <div class="history-section">
+                    <div class="section-header">
+                        <h3>Official Winning Numbers 🏆</h3>
+                        <div class="history-nav">
+                            <button id="history-first" class="nav-btn" title="First Page">&lt;&lt;</button>
+                            <button id="history-prev" class="nav-btn" title="Previous Page">&lt;</button>
+                            <button id="history-next" class="nav-btn" title="Next Page">&gt;</button>
+                            <button id="history-last" class="nav-btn" title="Last Page">&gt;&gt;</button>
+                        </div>
+                    </div>
+                    <div id="winning-history-log" class="history-log-container">
+                        <!-- Official history items will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="simulation-view" class="tab-content">
+                <div class="sim-container">
+                    <canvas id="simCanvas"></canvas>
+                    <div class="sim-controls">
+                        <div class="control-group">
+                            <label for="turbulence-slider">Turbulence 🌪️</label>
+                            <input type="range" id="turbulence-slider" min="0" max="20" value="5" step="1">
+                        </div>
+                        <div class="control-group">
+                            <label for="interval-input">Interval (sec) ⏱️</label>
+                            <input type="number" id="interval-input" min="0.5" max="10" value="2.0" step="0.5"
+                                style="width: 60px; text-align: center;">
+                        </div>
+                        <div class="control-group">
+                            <label for="gravity-slider">Gravity (Weight) ⚖️</label>
+                            <input type="range" id="gravity-slider" min="1" max="20" value="5" step="1">
+                        </div>
+                        <div class="control-group">
+                            <label for="size-slider">Ball Size 📏</label>
+                            <input type="range" id="size-slider" min="5" max="20" value="10" step="1">
+                        </div>
+                        <button id="sim-start-btn">Start Simulation 🌪️</button>
+                    </div>
+                    <div id="sim-results" class="ball-container"></div>
+                </div>
+            </div>
+
+            <footer class="footer">
+                <p>&copy; 2025 Lotto Generator. All rights reserved.</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Data Settings ⚙️</h3>
+                <button id="settings-close" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Choose how to load official winning numbers:</p>
+                <div class="settings-options">
+                    <div class="settings-card" id="use-default-data">
+                        <div class="icon">🔄</div>
+                        <div class="info">
+                            <h4>Default Data</h4>
+                            <p>Reset to original server data.</p>
+                        </div>
+                    </div>
+                    <div class="settings-card" id="upload-excel-btn">
+                        <div class="icon">📂</div>
+                        <div class="info">
+                            <h4>Upload Excel</h4>
+                            <p>Load from Donghang Lottery .xls file.</p>
+                        </div>
+                        <input type="file" id="excel-upload" accept=".xls" class="hidden">
+                    </div>
+                </div>
+
+                <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+
+                <div class="settings-group">
+                    <h4>Simulation Settings 🌪️</h4>
+                    <div class="control-group"
+                        style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
+                        <label for="sim-count-input">Training Sim Count:</label>
+                        <input type="number" id="sim-count-input" min="100" max="10000000" step="100" value="2000"
+                            style="padding: 5px; width: 80px; text-align: center;">
+                    </div>
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Number of headless simulations to run
+                        for AI training.</p>
+                </div>
+
+                <div id="upload-status" class="status-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="chart.js"></script>
+    <script src="winning_numbers.js?v=2"></script>
+    <!-- Modular JavaScript -->
+    <script src="js/config.js?v=1"></script>
+    <script src="js/utils.js?v=1"></script>
+    <script src="js/rng.js?v=1"></script>
+    <script src="js/algorithms.js?v=1"></script>
+    <script src="js/simulation.js?v=1"></script>
+    <script src="js/ui.js?v=1"></script>
+    <script src="js/ai.js?v=1"></script>
+    <script src="js/settings.js?v=1"></script>
+    <script src="js/chart-renderer.js?v=1"></script>
+    <script src="js/main.js?v=1"></script>
+</body>
+
+</html>

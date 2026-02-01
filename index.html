@@ -91,6 +91,75 @@
         .hits img {
             border-radius: 5px;
         }
+        
+        .projects-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+        
+        .projects-section h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .project-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .project-card {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        .project-icon {
+            font-size: 3em;
+            margin-right: 20px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .project-info h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        
+        .project-info p {
+            margin: 0;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 600px) {
+            .project-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .project-icon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -117,6 +186,19 @@
                 <a href="https://en.wikipedia.org/wiki/Quantitative_analysis_(finance)" target="_blank">#quant</a>
                 <a href="https://finviz.com/" target="_blank">#finviz</a>
             </p>
+        </div>
+        
+        <div class="projects-section">
+            <h2>🎯 Projects</h2>
+            <div class="project-cards">
+                <a href="/lottery/" class="project-card">
+                    <div class="project-icon">🎰</div>
+                    <div class="project-info">
+                        <h3>Lotto 6/45 Generator</h3>
+                        <p>AI-powered lottery number generator with multiple algorithms</p>
+                    </div>
+                </a>
+            </div>
         </div>
         
         <div class="badge-container">
