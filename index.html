@@ -8,8 +8,9 @@
     :root{
       --bg1:#070A12;
       --bg2:#120A2A;
-      --ink:#D7D2FF;
+      --ink:rgba(215,210,255,.92);
       --glow:rgba(170,120,255,.35);
+      --frame:rgba(215,210,255,.14);
     }
 
     *{ margin:0; padding:0; box-sizing:border-box; }
@@ -24,11 +25,12 @@
         radial-gradient(900px 700px at 80% 80%, rgba(90,210,255,.10), transparent 55%),
         linear-gradient(135deg, var(--bg1), var(--bg2));
       color:var(--ink);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial;
       letter-spacing:.02em;
       overflow:hidden;
     }
 
+    /* subtle noise */
     body::before{
       content:"";
       position:fixed; inset:0;
@@ -38,12 +40,12 @@
       pointer-events:none;
     }
 
-    .card{
+    main{
       width:min(640px, 92vw);
       padding:34px 28px;
       border-radius:22px;
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid rgba(215,210,255,.14);
+      border: 1px solid var(--frame);
       box-shadow:
         0 20px 70px rgba(0,0,0,.55),
         0 0 40px rgba(170,120,255,.12);
@@ -70,12 +72,18 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size: 20px;
       line-height: 1.45;
-      color: rgba(215,210,255,.92);
+      color: var(--ink);
       text-shadow:
         0 0 18px var(--glow),
         0 0 1px rgba(255,255,255,.25);
       animation: breath 6.5s ease-in-out infinite;
       white-space: nowrap;
+    }
+
+    /* JS가 막혀도 보이도록: 기본 텍스트는 남겨두고,
+       JS가 실행되면 data-raw 기반으로 ‘신비스러운 숫자’로 치환 */
+    .xy[data-raw]{
+      opacity: .98;
     }
 
     @keyframes breath{
@@ -85,20 +93,21 @@
   </style>
 
   <script>
+    // ASCII digits -> mathematical double-struck digits (𝟘-𝟡)
     const map = {
       "0":"𝟘","1":"𝟙","2":"𝟚","3":"𝟛","4":"𝟜",
       "5":"𝟝","6":"𝟞","7":"𝟟","8":"𝟠","9":"𝟡",
-      ".":"·", ",":"," 
+      ".":"·", ",":","
     };
 
     function mystify(text){
-      return text.split("").map(ch => map[ch] ?? ch).join(""
-);
+      return String(text).split("").map(ch => map[ch] ?? ch).join("");
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll("[data-raw]").forEach(el => {
-        const raw = el.getAttribute("data-raw") || "";
+      document.querySelectorAll(".xy[data-raw]").forEach(el => {
+        const raw = el.getAttribute("data-raw");
+        // 폴백(원문 좌표) 유지 + JS 실행 시 신비스러운 숫자로 교체
         el.textContent = mystify(raw);
       });
     });
@@ -106,10 +115,17 @@
 </head>
 
 <body>
-  <main class="card">
+  <main>
     <section class="coords" aria-label="coordinates">
-      <div class="line"><div class="xy" data-raw="37.392706, 126.644162"></div></div>
-      <div class="line"><div class="xy" data-raw="38.039640, 128.727430"></div></div>
+      <!-- 송도 센트럴파크 -->
+      <div class="line">
+        <div class="xy" data-raw="37.392706, 126.644162">37.392706, 126.644162</div>
+      </div>
+
+      <!-- 양양 죽도해변 -->
+      <div class="line">
+        <div class="xy" data-raw="38.039640, 128.727430">38.039640, 128.727430</div>
+      </div>
     </section>
   </main>
 </body>
