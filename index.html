@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>changjurhee's blog</title>
+  <title>changjurhee</title>
   <style>
     :root{
       --bg1:#070A12;
       --bg2:#120A2A;
-      --ink:rgba(215,210,255,.92);
-      --glow:rgba(170,120,255,.35);
-      --frame:rgba(215,210,255,.14);
+      --ink:rgba(230,226,255,.92);
+      --glow:rgba(170,120,255,.45);
     }
 
     *{ margin:0; padding:0; box-sizing:border-box; }
@@ -20,13 +19,12 @@
       display:grid;
       place-items:center;
       padding:24px;
+      text-align:center;
       background:
         radial-gradient(1200px 800px at 20% 20%, rgba(145,110,255,.18), transparent 60%),
         radial-gradient(900px 700px at 80% 80%, rgba(90,210,255,.10), transparent 55%),
         linear-gradient(135deg, var(--bg1), var(--bg2));
       color:var(--ink);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", Arial;
-      letter-spacing:.02em;
       overflow:hidden;
     }
 
@@ -36,59 +34,34 @@
       position:fixed; inset:0;
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.15'/%3E%3C/svg%3E");
       mix-blend-mode:overlay;
-      opacity:.22;
+      opacity:.20;
       pointer-events:none;
-    }
-
-    main{
-      width:min(640px, 92vw);
-      padding:34px 28px;
-      border-radius:22px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid var(--frame);
-      box-shadow:
-        0 20px 70px rgba(0,0,0,.55),
-        0 0 40px rgba(170,120,255,.12);
-      backdrop-filter: blur(10px);
     }
 
     .coords{
       display:flex;
       flex-direction:column;
-      gap:18px;
-      align-items:flex-start;
-    }
-
-    .line{
-      width:100%;
-      padding:14px 16px;
-      border-radius:14px;
-      background: rgba(0,0,0,.22);
-      border: 1px solid rgba(215,210,255,.10);
-      box-shadow: 0 0 0 1px rgba(170,120,255,.06) inset;
+      gap:22px;
+      align-items:center;
+      justify-content:center;
     }
 
     .xy{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 20px;
-      line-height: 1.45;
+      font-size: clamp(28px, 4.2vw, 44px);
+      line-height: 1.15;
+      letter-spacing: .06em;
       color: var(--ink);
       text-shadow:
-        0 0 18px var(--glow),
-        0 0 1px rgba(255,255,255,.25);
-      animation: breath 6.5s ease-in-out infinite;
+        0 0 28px var(--glow),
+        0 0 1px rgba(255,255,255,.22);
+      animation: breath 7.2s ease-in-out infinite;
       white-space: nowrap;
     }
 
-    /* JS가 막혀도 보이도록: 기본 텍스트는 남겨두고,
-       JS가 실행되면 data-raw 기반으로 ‘신비스러운 숫자’로 치환 */
-    .xy[data-raw]{
-      opacity: .98;
-    }
-
     @keyframes breath{
-      0%,100%{ opacity:.86; filter: blur(.0px); }
-      50%{ opacity:1; filter: blur(.15px); }
+      0%,100%{ opacity:.82; filter: blur(0px); }
+      50%{ opacity:1; filter: blur(.2px); }
     }
   </style>
 
@@ -106,8 +79,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll(".xy[data-raw]").forEach(el => {
-        const raw = el.getAttribute("data-raw");
-        // 폴백(원문 좌표) 유지 + JS 실행 시 신비스러운 숫자로 교체
+        const raw = el.getAttribute("data-raw") || "";
         el.textContent = mystify(raw);
       });
     });
@@ -115,18 +87,9 @@
 </head>
 
 <body>
-  <main>
-    <section class="coords" aria-label="coordinates">
-      <!-- 송도 센트럴파크 -->
-      <div class="line">
-        <div class="xy" data-raw="37.392706, 126.644162">37.392706, 126.644162</div>
-      </div>
-
-      <!-- 양양 죽도해변 -->
-      <div class="line">
-        <div class="xy" data-raw="38.039640, 128.727430">38.039640, 128.727430</div>
-      </div>
-    </section>
+  <main class="coords" aria-label="coordinates">
+    <div class="xy" data-raw="37.392706, 126.644162">37.392706, 126.644162</div>
+    <div class="xy" data-raw="38.039640, 128.727430">38.039640, 128.727430</div>
   </main>
 </body>
 </html>
