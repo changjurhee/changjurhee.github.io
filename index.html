@@ -1,136 +1,120 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>changjurhee's blog</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 700px;
-            text-align: center;
-        }
-        
-        h1 {
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .tags {
-            color: #666;
-            font-size: 1em;
-            line-height: 2;
-            margin-bottom: 30px;
-        }
-        
-        .tags a {
-            color: #667eea;
-            text-decoration: none;
-            margin: 0 5px;
-            transition: all 0.3s ease;
-            padding: 5px 10px;
-            border-radius: 5px;
-            display: inline-block;
-        }
-        
-        .tags a:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .badge-container {
-            margin-top: 30px;
-        }
-        
-        .badge-container img {
-            transition: transform 0.3s ease;
-            border-radius: 10px;
-        }
-        
-        .badge-container img:hover {
-            transform: scale(1.05);
-        }
-        
-        .copyright {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: #999;
-            font-size: 0.9em;
-        }
-        
-        .hits {
-            margin-top: 15px;
-        }
-        
-        .hits img {
-            border-radius: 5px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>changjurhee's blog</title>
+  <style>
+    :root{
+      --bg1:#070A12;
+      --bg2:#120A2A;
+      --ink:#D7D2FF;
+      --mist:rgba(215,210,255,.10);
+      --glow:rgba(170,120,255,.35);
+    }
+
+    *{ margin:0; padding:0; box-sizing:border-box; }
+
+    body{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+      background:
+        radial-gradient(1200px 800px at 20% 20%, rgba(145,110,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 80% 80%, rgba(90,210,255,.10), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial;
+      letter-spacing:.02em;
+      overflow:hidden;
+    }
+
+    /* subtle noise */
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.15'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+      opacity:.22;
+      pointer-events:none;
+    }
+
+    .card{
+      width:min(640px, 92vw);
+      padding:34px 28px;
+      border-radius:22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(215,210,255,.14);
+      box-shadow:
+        0 20px 70px rgba(0,0,0,.55),
+        0 0 40px rgba(170,120,255,.12);
+      backdrop-filter: blur(10px);
+    }
+
+    .coords{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      align-items:flex-start;
+    }
+
+    .line{
+      width:100%;
+      padding:14px 16px;
+      border-radius:14px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(215,210,255,.10);
+      box-shadow: 0 0 0 1px rgba(170,120,255,.06) inset;
+    }
+
+    /* the “mysterious” number look */
+    .xy{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 20px;
+      line-height: 1.45;
+      color: rgba(215,210,255,.92);
+      text-shadow:
+        0 0 18px var(--glow),
+        0 0 1px rgba(255,255,255,.25);
+      animation: breath 6.5s ease-in-out infinite;
+      white-space: nowrap;
+    }
+
+    /* show a faint coordinate separator glyph */
+    .xy .sep{
+      color: rgba(215,210,255,.45);
+      padding: 0 10px;
+    }
+
+    @keyframes breath{
+      0%,100%{ opacity:.86; filter: blur(.0px); }
+      50%{ opacity:1; filter: blur(.15px); }
+    }
+  </style>
+
+  <script>
+    // Convert ASCII digits to mathematical double-struck digits: 0-9 -> 𝟘-𝟡
+    const map = {
+      "0":"𝟘","1":"𝟙","2":"𝟚","3":"𝟛","4":"𝟜",
+      "5":"𝟝","6":"𝟞","7":"𝟟","8":"𝟠","9":"𝟡",
+      ".":"·", ",":","
+    };
+
+    function mystify(text){
+      return text.split("").map(ch => map[ch] ?? ch).join("");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll("[data-raw]").forEach(el => {
+        const raw = el.getAttribute("data-raw");
+        el.textContent = mystify(raw);
+      });
+    });
+  </script>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🚀 Luke, Use the Source</h1>
-        
-        <div class="tags">
-            <p>
-                <a href="https://ko.wikipedia.org/wiki/신지_(가수)" target="_blank">#신지</a>
-                <a href="https://ko.wikipedia.org/wiki/최진실" target="_blank">#최진실</a>
-                <a href="https://youtu.be/ttclc6inhKQ" target="_blank">#질투</a>
-                <a href="https://deepmind.google/technologies/alphago/" target="_blank">#AlphaGo</a>
-                <a href="https://en.wikipedia.org/wiki/Reinforcement_learning" target="_blank">#RL</a>
-                <a href="https://www.rust-lang.org/" target="_blank">#Rust</a>
-                <a href="https://cplusplus.com/" target="_blank">#Cpp</a>
-                <a href="https://en.cppreference.com/" target="_blank">#cpp-reference</a>
-                <a href="https://isocpp.org/" target="_blank">#isocpp</a>
-                <a href="https://en.cppreference.com/w/cpp/26" target="_blank">#cpp26</a>
-                <a href="https://github.com/hsutter/cppfront" target="_blank">#cppfront</a>
-                <a href="https://github.com/carbon-language/carbon-lang" target="_blank">#carbon</a>
-                <a href="https://en.wikipedia.org/wiki/Algorithm" target="_blank">#Algorithm</a>
-                <a href="https://www.blender.org/" target="_blank">#blender</a>
-                <a href="https://www.boost.org/" target="_blank">#boost</a>
-                <a href="https://en.wikipedia.org/wiki/Quantitative_analysis_(finance)" target="_blank">#quant</a>
-                <a href="https://finviz.com/" target="_blank">#finviz</a>
-            </p>
-        </div>
-        
-        <div class="badge-container">
-            <a href="https://solved.ac/changjurhee">
-                <img src="http://mazassumnida.wtf/api/v2/generate_badge?boj=changjurhee" alt="Solved.ac Profile">
-            </a>
-        </div>
-        
-        <div class="copyright">
-            <p>Copyright © changju.rhee since 2012</p>
-            <div class="hits">
-                <img src="https://hits.sh/changjurhee.github.io.svg" alt="Hits"/>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+  <main class="card">
+    <*
+
