@@ -9,7 +9,6 @@
       --bg1:#070A12;
       --bg2:#120A2A;
       --ink:#D7D2FF;
-      --mist:rgba(215,210,255,.10);
       --glow:rgba(170,120,255,.35);
     }
 
@@ -30,7 +29,6 @@
       overflow:hidden;
     }
 
-    /* subtle noise */
     body::before{
       content:"";
       position:fixed; inset:0;
@@ -68,7 +66,6 @@
       box-shadow: 0 0 0 1px rgba(170,120,255,.06) inset;
     }
 
-    /* the “mysterious” number look */
     .xy{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size: 20px;
@@ -81,12 +78,6 @@
       white-space: nowrap;
     }
 
-    /* show a faint coordinate separator glyph */
-    .xy .sep{
-      color: rgba(215,210,255,.45);
-      padding: 0 10px;
-    }
-
     @keyframes breath{
       0%,100%{ opacity:.86; filter: blur(.0px); }
       50%{ opacity:1; filter: blur(.15px); }
@@ -94,20 +85,20 @@
   </style>
 
   <script>
-    // Convert ASCII digits to mathematical double-struck digits: 0-9 -> 𝟘-𝟡
     const map = {
       "0":"𝟘","1":"𝟙","2":"𝟚","3":"𝟛","4":"𝟜",
       "5":"𝟝","6":"𝟞","7":"𝟟","8":"𝟠","9":"𝟡",
-      ".":"·", ",":","
+      ".":"·", ",":"," 
     };
 
     function mystify(text){
-      return text.split("").map(ch => map[ch] ?? ch).join("");
+      return text.split("").map(ch => map[ch] ?? ch).join(""
+);
     }
 
     window.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll("[data-raw]").forEach(el => {
-        const raw = el.getAttribute("data-raw");
+        const raw = el.getAttribute("data-raw") || "";
         el.textContent = mystify(raw);
       });
     });
@@ -116,5 +107,10 @@
 
 <body>
   <main class="card">
-    <*
-
+    <section class="coords" aria-label="coordinates">
+      <div class="line"><div class="xy" data-raw="37.392706, 126.644162"></div></div>
+      <div class="line"><div class="xy" data-raw="38.039640, 128.727430"></div></div>
+    </section>
+  </main>
+</body>
+</html>
