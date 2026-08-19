@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데이터 플라이휠(Data Flywheel) 연구 지도</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --c-robotics:     #2a78d6;
+    --c-driving:      #eb6834;
+    --c-agent:        #1baf7a;
+    --c-vision:       #eda100;
+    --c-llm:          #e87ba4;
+    --scrim:          rgba(11,11,11,0.45);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --c-robotics:     #3987e5;
+      --c-driving:      #d95926;
+      --c-agent:        #199e70;
+      --c-vision:       #c98500;
+      --c-llm:          #d55181;
+      --scrim:          rgba(0,0,0,0.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1260px; margin: 0 auto; padding: 32px 20px 64px; }
+  header h1 { font-size: 1.55rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header p.sub { margin: 0; color: var(--text-secondary); font-size: 0.95rem; }
+  header p.hint { margin: 6px 0 0; color: var(--text-muted); font-size: 0.85rem; }
+
+  /* ---- tabs ---- */
+  .tabs { display: flex; gap: 6px; margin-top: 22px; border-bottom: 1px solid var(--grid); }
+  .tab-btn {
+    background: none; border: none; border-bottom: 3px solid transparent;
+    font: inherit; font-weight: 600; font-size: 0.95rem; color: var(--text-secondary);
+    padding: 10px 16px 8px; cursor: pointer;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn[aria-selected="true"] { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+  .panel { display: none; margin-top: 16px; }
+  .panel.active { display: block; }
+
+  .board {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 8px;
+  }
+  svg.big { width: 100%; height: auto; display: block; }
+  svg text { font-family: inherit; }
+  svg .t-title { font-size: 14.5px; font-weight: 650; fill: var(--text-primary); }
+  svg .t-sub   { font-size: 11.5px; fill: var(--text-secondary); }
+  svg .t-meta  { font-size: 11px; fill: var(--text-muted); }
+  svg .t-branch{ font-size: 14px; font-weight: 700; fill: var(--text-primary); }
+  svg .t-center{ font-size: 19px; font-weight: 750; fill: var(--text-primary); }
+  svg .t-center-sub{ font-size: 12px; fill: var(--text-secondary); }
+  svg g.paper, svg g.gnode { cursor: pointer; }
+  svg g.paper:hover rect, svg g.paper:focus-visible rect { stroke-width: 3; }
+  svg g.paper:focus-visible, svg g.gnode:focus-visible { outline: none; }
+  svg g.gnode:hover circle.core, svg g.gnode:focus-visible circle.core { stroke-width: 4; }
+
+  .legend-row { display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 14px 4px; font-size: 0.82rem; color: var(--text-secondary); align-items: center; }
+  .legend-row .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .legend-row .ln { display: inline-block; width: 26px; height: 0; border-top: 2px solid var(--text-muted); margin-right: 6px; vertical-align: 3px; }
+  .legend-row .ln.dash { border-top-style: dashed; }
+
+  /* ---- timeline ---- */
+  .timeline { position: relative; padding: 10px 0 10px 30px; margin: 8px 12px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 9px; top: 0; bottom: 0;
+    width: 2px; background: var(--grid);
+  }
+  .tl-year {
+    position: relative; margin: 22px 0 10px; font-size: 1.02rem; font-weight: 750;
+  }
+  .tl-year::before {
+    content: ""; position: absolute; left: -27px; top: 7px; width: 10px; height: 10px;
+    border-radius: 50%; background: var(--text-muted);
+  }
+  .tl-item {
+    position: relative; display: flex; gap: 12px; align-items: baseline;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; margin: 8px 0; cursor: pointer;
+    width: 100%; text-align: left; font: inherit; color: inherit;
+  }
+  .tl-item:hover { border-color: var(--text-muted); }
+  .tl-item::before {
+    content: ""; position: absolute; left: -25px; top: 16px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--dot, var(--text-muted));
+  }
+  .tl-item .m { color: var(--text-muted); font-size: 0.8rem; min-width: 34px; }
+  .tl-item .t { font-weight: 640; font-size: 0.92rem; }
+  .tl-item .d { color: var(--text-secondary); font-size: 0.84rem; }
+  .tl-item .v { margin-left: auto; color: var(--text-muted); font-size: 0.78rem; white-space: nowrap; }
+
+  /* ---- list ---- */
+  section.list { margin-top: 30px; }
+  section.list h2 { font-size: 1.05rem; margin: 0 0 10px; }
+  .paper-row {
+    display: flex; align-items: baseline; gap: 12px; width: 100%;
+    text-align: left; background: var(--surface-1);
+    border: 1px solid var(--border); border-left: 4px solid var(--bc, var(--baseline));
+    border-radius: 10px; padding: 11px 16px; margin-bottom: 8px;
+    cursor: pointer; color: inherit; font: inherit;
+  }
+  .paper-row:hover { border-color: var(--text-muted); border-left-color: var(--bc, var(--baseline)); }
+  .paper-row .rt { font-weight: 640; font-size: 0.93rem; }
+  .paper-row .rm { color: var(--text-muted); font-size: 0.8rem; margin-left: auto; white-space: nowrap; }
+
+  /* ---- modal ---- */
+  .overlay {
+    position: fixed; inset: 0; background: var(--scrim);
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 4vh 16px; z-index: 50; overflow-y: auto;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 16px; max-width: 820px; width: 100%;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+  }
+  .modal-head { padding: 22px 26px 16px; border-bottom: 1px solid var(--grid); position: relative; }
+  .modal-head .tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 0.78rem; font-weight: 650; color: var(--text-secondary); margin-bottom: 8px;
+  }
+  .modal-head .tag .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .modal-head h2 { margin: 0 0 6px; font-size: 1.22rem; line-height: 1.35; letter-spacing: -0.01em; padding-right: 40px; }
+  .modal-head .meta { color: var(--text-muted); font-size: 0.85rem; }
+  .modal-head .links { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .modal-head .links a {
+    display: inline-block; text-decoration: none; font-size: 0.84rem; font-weight: 600;
+    color: var(--text-primary); border: 1.5px solid var(--baseline);
+    border-radius: 8px; padding: 6px 12px;
+  }
+  .modal-head .links a:hover { border-color: var(--text-primary); }
+  .close-btn {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    width: 34px; height: 34px; font-size: 1rem; line-height: 1;
+    color: var(--text-secondary); cursor: pointer;
+  }
+  .close-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+  .modal-body { padding: 20px 26px 28px; }
+  .modal-body h3 {
+    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-muted); margin: 22px 0 8px; font-weight: 700;
+  }
+  .modal-body h3:first-child { margin-top: 0; }
+  .modal-body p { margin: 0 0 10px; font-size: 0.95rem; }
+  .modal-body p.results { color: var(--text-secondary); }
+  .metric-box {
+    border: 1px solid var(--grid); border-radius: 10px; padding: 12px 16px;
+    font-size: 0.9rem; color: var(--text-secondary);
+  }
+  .metric-box b { color: var(--text-primary); }
+  .metric-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
+  .diagram-holder { margin: 12px 0 4px; }
+  .diagram-holder svg { width: 100%; height: auto; display: block; }
+  .diag-caption { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+
+  footer.src { margin-top: 36px; color: var(--text-muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>데이터 플라이휠(Data Flywheel) 연구 지도</h1>
+    <p class="sub">비전 데이터 엔진 · LLM 자기개선 · 로보틱스 · 자율주행 · AI 에이전트 — 5개 테마, 주요 논문 15편</p>
+    <p class="hint">논문 노드를 클릭하면 요약 · 아키텍처 다이어그램 · 학술 지표(선정 근거) · 원문 링크가 열립니다.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn" role="tab" id="tab-theme" aria-selected="true" data-panel="panel-theme">테마 지도</button>
+    <button class="tab-btn" role="tab" id="tab-time" aria-selected="false" data-panel="panel-time">시간순</button>
+    <button class="tab-btn" role="tab" id="tab-graph" aria-selected="false" data-panel="panel-graph">연관성 그래프</button>
+  </div>
+
+  <div class="panel active" id="panel-theme" role="tabpanel" aria-labelledby="tab-theme">
+    <div class="board">
+      <div class="legend-row" id="legend-theme"></div>
+      <svg class="big" id="mindmap" viewBox="0 0 1240 870" role="group" aria-label="테마별 논문 마인드맵"></svg>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-time" role="tabpanel" aria-labelledby="tab-time">
+    <div class="board">
+      <div class="legend-row" id="legend-time"></div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-graph" role="tabpanel" aria-labelledby="tab-graph">
+    <div class="board">
+      <div class="legend-row" id="legend-graph"></div>
+      <svg class="big" id="relgraph" viewBox="0 0 1240 760" role="group" aria-label="논문 상호 연관성 그래프"></svg>
+    </div>
+  </div>
+
+  <section class="list" aria-label="논문 목록">
+    <h2>논문 목록 (시간순 텍스트 보기)</h2>
+    <div id="paper-list"></div>
+  </section>
+
+  <footer class="src" id="foot-note"></footer>
+</div>
+
+<!-- modal -->
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div class="modal-head">
+      <span class="tag"><span class="dot" id="m-dot"></span><span id="m-branch"></span></span>
+      <h2 id="m-title"></h2>
+      <div class="meta" id="m-meta"></div>
+      <div class="links" id="m-links"></div>
+      <button class="close-btn" id="m-close" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>학술 지표 · 주요 논문 선정 근거</h3>
+      <div class="metric-box" id="m-metric"></div>
+      <h3>요약</h3>
+      <p id="m-summary"></p>
+      <h3>핵심 아키텍처</h3>
+      <p id="m-arch"></p>
+      <div class="diagram-holder" id="m-diagram"></div>
+      <p class="diag-caption" id="m-caption"></p>
+      <h3>주요 결과</h3>
+      <p class="results" id="m-results"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   데이터
+   ========================================================= */
+const THEMES = {
+  vision:   { label: "비전 데이터 엔진 (개념 기원)", cssVar: "--c-vision"   },
+  llm:      { label: "LLM 자기개선 계보",            cssVar: "--c-llm"      },
+  robotics: { label: "로보틱스 · Embodied AI",        cssVar: "--c-robotics" },
+  driving:  { label: "자율주행",                      cssVar: "--c-driving"  },
+  agent:    { label: "AI 에이전트 · 엔터프라이즈",    cssVar: "--c-agent"    }
+};
+
+const CITE_NOTE = "인용 수는 Semantic Scholar 기준 근사치(2026년 초). 최신 수치는 각 논문의 'Semantic Scholar' 링크에서 확인하세요.";
+
+const PAPERS = {
+  /* ---------- 비전: 데이터 엔진 기원 ---------- */
+  "sam": {
+    theme: "vision", short: "Segment Anything (SAM)", sub: "3단계 데이터 엔진 · SA-1B",
+    title: "Segment Anything",
+    date: "2023-04", arxivId: "2304.02643",
+    meta: "Kirillov et al. (Meta AI) · ICCV 2023 · arXiv 2304.02643",
+    venue: "ICCV 2023",
+    citeTier: "10,000+ (분야 최상위)",
+    evidence: "'데이터 엔진'을 통한 파운데이션 모델 구축을 대중화한 기념비적 논문. ICCV 2023 게재, 인용 수 만 단위의 초고인용 논문으로 이후 데이터 플라이휠 연구들이 공통적으로 참조하는 개념적 기원.",
+    summary: "프롬프트 기반 범용 분할(segmentation) 파운데이션 모델 SAM과, 이를 만들기 위한 '데이터 엔진'을 제안합니다. 모델이 라벨링을 돕고 그 라벨로 모델이 다시 강해지는 모델-인-더-루프 순환으로, 1,100만 이미지에 11억 개 마스크(SA-1B)라는 사상 최대 분할 데이터셋을 구축했습니다.",
+    arch: "데이터 엔진은 3단계로 진화합니다. 1단계 보조 수동(assisted-manual)에서는 SAM이 어노테이터의 마스크 작업을 보조하고, 2단계 반자동(semi-automatic)에서는 모델이 확신하는 객체는 자동 생성하고 사람은 나머지만 채우며, 3단계 완전 자동(fully automatic)에서는 포인트 그리드 프롬프트만으로 모델이 마스크를 전부 생성합니다. 각 단계에서 모은 데이터로 모델을 재학습해 다음 단계의 자동화율을 높이는 플라이휠 구조입니다.",
+    stages: ["보조 수동 라벨링|모델이 사람을 보조", "반자동 라벨링|잔여 객체만 사람이", "완전 자동 생성|프롬프트 그리드", "모델 재학습|자동화율 상승"],
+    center: "SAM\n데이터 엔진",
+    results: "SA-1B: 1,100만 이미지 · 11억 마스크(기존 최대 대비 400배). 23개 벤치마크에서 zero-shot 전이 성능이 지도학습 대비 경쟁력 확보.",
+    caption: "SAM 데이터 엔진: 라벨링 자동화 단계가 올라갈수록 모델과 데이터가 함께 성장"
+  },
+  "sam2": {
+    theme: "vision", short: "SAM 2", sub: "비디오 데이터 엔진 · SA-V",
+    title: "SAM 2: Segment Anything in Images and Videos",
+    date: "2024-08", arxivId: "2408.00714",
+    meta: "Ravi et al. (Meta AI) · arXiv 2408.00714 · ICLR 2025",
+    venue: "ICLR 2025",
+    citeTier: "1,000+",
+    evidence: "SAM 데이터 엔진을 비디오로 확장한 직계 후속 연구. ICLR 2025 게재, 공개 1년여 만에 인용 1,000회 이상.",
+    summary: "이미지·비디오 통합 분할 모델 SAM 2와, 비디오용 모델-인-더-루프 데이터 엔진을 제안합니다. 어노테이터가 모델의 예측을 교정하면 그 데이터로 모델을 재학습하는 순환을 통해 대규모 비디오 분할 데이터셋 SA-V를 구축했습니다.",
+    arch: "데이터 엔진은 모델과 어노테이터의 상호작용 루프입니다. SAM 2가 비디오 프레임 전반에 마스클릿(masklet)을 전파·예측하면 어노테이터는 틀린 부분만 교정하고, 교정된 데이터가 모델 재학습에 투입됩니다. 재학습된 모델은 어노테이션 속도를 다시 높여(최종적으로 초기 대비 약 8배) 데이터 수집 효율과 모델 품질이 함께 상승하는 플라이휠을 형성합니다.",
+    stages: ["모델이 마스클릿|전파·예측", "어노테이터 교정", "SA-V 데이터 축적", "모델 재학습|어노테이션 가속"],
+    center: "비디오\n데이터 엔진",
+    results: "SA-V: 약 5.1만 비디오 · 64만 마스클릿 규모의 최대 비디오 분할 데이터셋. 기존 대비 3배 적은 상호작용으로 더 높은 정확도, 이미지에서도 SAM보다 6배 빠르고 정확.",
+    caption: "SAM 2 데이터 엔진: 모델 예측 → 사람 교정 → 재학습이 반복되며 어노테이션 속도 자체가 가속"
+  },
+
+  /* ---------- LLM 자기개선 계보 ---------- */
+  "star": {
+    theme: "llm", short: "STaR", sub: "자가 부트스트랩 추론 학습",
+    title: "STaR: Bootstrapping Reasoning With Reasoning",
+    date: "2022-03", arxivId: "2203.14465",
+    meta: "Zelikman et al. (Stanford) · NeurIPS 2022 · arXiv 2203.14465",
+    venue: "NeurIPS 2022",
+    citeTier: "1,500+",
+    evidence: "모델이 스스로 만든 데이터로 스스로를 개선하는 루프를 정식화한 선구적 논문. NeurIPS 2022 게재, 이후 자기개선(self-improvement) 연구 계보의 출발점으로 널리 인용.",
+    summary: "소량의 예시만으로 LLM이 스스로 풀이 과정(rationale)을 생성하고, 정답으로 검증된 풀이만 골라 자신을 파인튜닝하는 부트스트랩 루프 STaR를 제안합니다. 모델 출력이 다시 학습 데이터가 되는 '데이터 플라이휠'의 초기 정식화입니다.",
+    arch: "루프는 생성-검증-학습의 순환입니다. 현재 모델이 문제마다 풀이와 답을 생성하고, 정답과 일치하는 풀이만 학습 데이터로 채택합니다. 모델이 못 푼 문제는 정답을 힌트로 준 상태에서 풀이를 재생성(rationalization)해 데이터에 추가합니다. 이 데이터로 파인튜닝된 모델이 다음 라운드의 생성기가 되어, 라운드를 거듭할수록 풀 수 있는 문제와 데이터가 함께 늘어납니다.",
+    stages: ["소량 예시로 시작", "풀이·답 생성", "정답 검증·필터링", "오답은 힌트로 재생성|(rationalization)", "채택 데이터로 파인튜닝"],
+    center: "STaR\n루프",
+    results: "CommonsenseQA에서 30배 큰 모델에 필적하는 성능, GSM8K 등 산술·추론 과제에서 직접 답 예측 파인튜닝 대비 큰 폭 향상.",
+    caption: "STaR: 모델이 만든 풀이 중 검증 통과분만 재학습에 투입 — 자기 생성 데이터 플라이휠의 원형"
+  },
+  "selfinstruct": {
+    theme: "llm", short: "Self-Instruct", sub: "지시 데이터 자가 생성",
+    title: "Self-Instruct: Aligning Language Models with Self-Generated Instructions",
+    date: "2022-12", arxivId: "2212.10560",
+    meta: "Wang et al. (UW 등) · ACL 2023 · arXiv 2212.10560",
+    venue: "ACL 2023",
+    citeTier: "3,000+",
+    evidence: "모델 스스로 인스트럭션 데이터를 만들어 정렬하는 방법론의 표준을 세운 논문. ACL 2023 게재, Stanford Alpaca 등 수많은 후속 모델의 데이터 생성 파이프라인이 이 구조를 따름.",
+    summary: "175개의 시드 태스크에서 출발해, 언어모델이 새로운 지시문(instruction)과 입출력 인스턴스를 스스로 생성·필터링하고 그 데이터로 자신을 파인튜닝하는 프레임워크입니다. 사람 어노테이션 없이 지시 수행 능력을 크게 끌어올려, 합성 데이터 플라이휠의 실용성을 입증했습니다.",
+    arch: "태스크 풀에서 샘플한 예시를 프롬프트로 모델이 새 지시문을 생성하고, 분류 과제 여부를 판별한 뒤 입출력 인스턴스를 만듭니다. ROUGE 유사도 기반 중복 제거와 품질 휴리스틱으로 필터링된 데이터만 태스크 풀에 재투입되며, 누적된 풀 전체로 원 모델을 파인튜닝합니다. 생성→필터→축적→학습의 순환이 사람 개입 없이 돌아가는 구조입니다.",
+    stages: ["시드 태스크 175개", "새 지시문 생성", "입출력 인스턴스 생성", "필터링·중복 제거", "풀 축적 → 파인튜닝"],
+    center: "Self-\nInstruct",
+    results: "GPT-3에 적용해 5.2만 개 지시 데이터 생성, SuperNatural-Instructions에서 원 모델 대비 33%p 절대 향상 — 사람 데이터로 학습한 InstructGPT-001에 근접.",
+    caption: "Self-Instruct: 시드 → 자가 생성 → 필터 → 파인튜닝 순환으로 정렬 데이터를 증식"
+  },
+  "selfrewarding": {
+    theme: "llm", short: "Self-Rewarding LMs", sub: "LLM-as-Judge 자기 보상",
+    title: "Self-Rewarding Language Models",
+    date: "2024-01", arxivId: "2401.10020",
+    meta: "Yuan et al. (Meta & NYU) · ICML 2024 · arXiv 2401.10020",
+    venue: "ICML 2024",
+    citeTier: "600+",
+    evidence: "보상 신호까지 모델이 스스로 만들어 반복 개선하는 구조를 제시해 자기개선 계보를 한 단계 확장. ICML 2024 게재, 자기 보상 학습 연구의 대표 참조점.",
+    summary: "모델이 응답 생성자이자 평가자(LLM-as-a-Judge)를 겸해, 스스로 만든 선호 데이터로 반복 DPO 학습을 수행하는 프레임워크입니다. 사람 선호 데이터의 병목 없이 지시 수행 능력과 자기 평가 능력이 함께 향상되는 플라이휠을 보였습니다.",
+    arch: "각 반복(iteration)에서 모델은 새 프롬프트에 대해 후보 응답 여러 개를 생성하고, 같은 모델이 채점 기준 프롬프트로 후보들을 평가해 선호쌍을 구성합니다. 이 선호 데이터로 DPO 학습을 수행해 다음 세대 모델을 만들고, 그 모델이 다시 생성과 평가를 맡습니다. 생성 능력과 평가 능력이 함께 좋아져 반복마다 보상 신호의 품질 자체가 개선되는 것이 핵심입니다.",
+    stages: ["프롬프트 생성", "후보 응답 생성", "자기 평가|LLM-as-Judge", "선호쌍 구성", "반복 DPO 학습"],
+    center: "자기 보상\n루프",
+    results: "Llama 2 70B에 3회 반복 적용 시 AlpacaEval 2.0에서 Claude 2, Gemini Pro, GPT-4 0613을 능가하는 성능 보고.",
+    caption: "Self-Rewarding: 생성자와 심판을 겸하는 모델이 반복마다 더 나은 보상 신호를 만들어내는 순환"
+  },
+
+  /* ---------- 로보틱스 · Embodied AI ---------- */
+  "mimicgen": {
+    theme: "robotics", short: "MimicGen", sub: "시연 자동 증식 시스템",
+    title: "MimicGen: A Data Generation System for Scalable Robot Learning using Human Demonstrations",
+    date: "2023-10", arxivId: "2310.17596",
+    meta: "Mandlekar et al. (NVIDIA) · CoRL 2023 · arXiv 2310.17596",
+    venue: "CoRL 2023",
+    citeTier: "400+",
+    evidence: "소량의 인간 시연을 대규모 학습 데이터로 증식하는 자동 생성 계열의 대표 논문. CoRL 2023 게재, DexMimicGen·DexFlyWheel 등 후속 데이터 생성 연구의 토대.",
+    summary: "약 200개의 인간 시연만으로 5만 개 이상의 학습 시연을 자동 생성하는 시스템입니다. 시연을 객체 중심 세그먼트로 분해한 뒤 새로운 장면·객체 배치에 맞게 변환·재조합해, 사람의 추가 개입 없이 데이터셋을 증식합니다.",
+    arch: "인간 시연을 객체 기준의 부분 궤적으로 분할하고, 새 환경에서 객체 자세에 맞춰 각 세그먼트를 공간 변환한 후 이어붙여 로봇이 실행합니다. 실행이 성공한 궤적만 새 시연으로 채택되어 데이터셋에 추가되는 생성-실행-검증 루프입니다. 이렇게 만든 데이터로 모방학습을 수행하면 원 시연만으로는 도달 못 할 다양한 환경·과제로 일반화됩니다.",
+    stages: ["인간 시연 ~200개", "객체 중심 분할", "새 장면에 변환·재조합", "실행 성공분만 채택", "대규모 데이터셋|모방학습"],
+    center: "시연 증식\n루프",
+    results: "18개 과제·다양한 장면/객체에 걸쳐 5만+ 시연 생성, 생성 데이터만으로 모방학습 정책이 높은 성공률 달성 — 추가 인간 시연 대비 노동 비용을 획기적으로 절감.",
+    caption: "MimicGen: 소량 시연 → 자동 변환·검증 → 대규모 데이터 — 로봇 데이터 플라이휠의 합성 증식 축"
+  },
+  "autort": {
+    theme: "robotics", short: "AutoRT", sub: "로봇 플릿 자율 데이터 수집",
+    title: "AutoRT: Embodied Foundation Models for Large Scale Orchestration of Robotic Agents",
+    date: "2024-01", arxivId: "2401.12963",
+    meta: "Ahn et al. (Google DeepMind) · arXiv 2401.12963 · 2024",
+    venue: "arXiv 2024 (DeepMind)",
+    citeTier: "150+",
+    evidence: "파운데이션 모델로 로봇 무리(fleet)의 실세계 데이터 수집을 오케스트레이션한 최초 규모의 실증. '로봇을 데이터 수집기로'라는 플라이휠 관점의 대표 사례로 후속 연구가 참조.",
+    summary: "VLM과 LLM을 결합해 로봇 여러 대가 사람 손길이 닿지 않은 실환경에서 스스로 할 일을 제안하고 수행하며 학습 데이터를 수집하게 하는 시스템입니다. '로봇 헌법(robot constitution)'이라는 안전 규칙으로 자율 수집의 안전성을 제어합니다.",
+    arch: "각 로봇의 VLM이 환경을 이해해 상황을 서술하면, LLM이 수행할 조작 태스크 후보를 제안합니다. 어포던스 판단과 로봇 헌법 기반 안전 필터를 통과한 태스크만 자율 실행 또는 원격 조작으로 수행되고, 수행 에피소드가 데이터셋으로 축적됩니다. 축적된 데이터는 정책 모델(RT 계열 등) 개선에 쓰여, 더 유능해진 로봇이 더 다양한 데이터를 모으는 순환을 지향합니다.",
+    stages: ["VLM 환경 이해", "LLM 태스크 제안", "안전 필터|로봇 헌법", "자율/원격 실행", "에피소드 축적|모델 개선"],
+    center: "플릿\n오케스트레이션",
+    results: "4개 건물, 20대 이상 로봇을 7개월간 운영해 6,650개 고유 태스크, 7.7만 개 실로봇 에피소드 수집 — 실세계 자율 데이터 수집의 최대 규모 실증 중 하나.",
+    caption: "AutoRT: 파운데이션 모델이 로봇 플릿의 '무엇을 할지'를 제안·필터링하며 데이터 수집을 확장"
+  },
+  "dexflywheel": {
+    theme: "robotics", short: "DexFlyWheel", sub: "자기개선 데이터 생성 루프",
+    title: "DexFlyWheel: A Scalable and Self-improving Data Generation Framework for Dexterous Manipulation",
+    date: "2025-09", arxivId: "2509.23829",
+    meta: "NeurIPS 2025 · arXiv 2509.23829",
+    venue: "NeurIPS 2025",
+    citeTier: "신규 (2025) · 인용 축적 단계",
+    evidence: "최상위 학회 NeurIPS 2025 게재. '플라이휠'을 이름에 내걸고 자기개선 데이터 생성 루프를 정밀 조작에서 정량 입증한 최신 대표 연구.",
+    summary: "정밀 조작(dexterous manipulation)용 대규모·다양성 데이터셋의 부재를 해결하기 위해, 자기 개선 사이클로 데이터 다양성을 지속 확장하는 데이터 생성 프레임워크를 제안합니다. 소량의 시드 시연에서 출발해 반복 사이클마다 데이터가 스스로 증식하는 구조입니다.",
+    arch: "각 사이클은 시드 시연 워밍업으로 시작해, 모방학습(IL)으로 사람다운 행동을 추출하고 잔차 강화학습(residual RL)으로 일반화 성능을 끌어올립니다. 학습된 정책이 시뮬레이션에서 궤적을 수집하면, 이를 다양한 환경·공간 배치로 증강해 데이터셋을 확장하고, 확장된 데이터가 다음 사이클의 학습 입력으로 되돌아가며 루프가 닫힙니다. 디지털 트윈 시뮬레이션을 거쳐 실물 로봇으로 전이됩니다.",
+    stages: ["시드 시연|워밍업", "모방학습 (IL)", "잔차 강화학습|(Residual RL)", "시뮬레이션|궤적 수집", "환경·공간 증강|데이터 확장"],
+    center: "자기개선\n사이클",
+    results: "4개 난도 높은 과제에서 2,000개 이상의 다양한 시연 생성, 챌린지 테스트셋 평균 성공률 81.9%, 실물 양팔 리프트 성공률 78.3%.",
+    caption: "DexFlyWheel: IL+RL 하이브리드 정책이 시뮬레이션에서 데이터를 생성하고, 증강 데이터가 다음 사이클로 환류"
+  },
+  "scanford": {
+    theme: "robotics", short: "Robot-Powered Flywheels", sub: "Scanford 도서관 실증",
+    title: "Robot-Powered Data Flywheels: Deploying Robots in the Wild for Continual Data Collection and Foundation Model Adaptation",
+    date: "2025-11", arxivId: "2511.19647",
+    meta: "Grannen et al. (Stanford) · arXiv 2511.19647 · 2025년 11월",
+    venue: "arXiv 2025 (Stanford)",
+    citeTier: "신규 (2025) · 인용 축적 단계",
+    evidence: "로봇을 '데이터 생성기'로 전환하는 플라이휠을 실제 도서관 2주 운영으로 입증한 스탠퍼드의 최신 실증 연구. 자동 라벨링으로 사람 개입을 제거한 점이 주목받음.",
+    summary: "로봇을 완성된 모델의 소비자가 아니라, 유용한 작업을 수행하는 동시에 파운데이션 모델 적응용 실세계 데이터를 수집하는 '데이터 생성기'로 전환합니다. 이동 매니퓰레이터 Scanford를 스탠퍼드 동아시아도서관에 2주간 배치해 서가를 스캔하며, 도서관 카탈로그로 사람 라벨링 없이 자동 정답 라벨을 얻는 선순환을 실증했습니다.",
+    arch: "로봇이 서가 스캔 작업을 수행하면 VLM이 어지러운 실제 환경에서 책을 인식하고, 도서관 카탈로그와 대조해 자동으로 정답 라벨이 생성됩니다. 축적된 데이터로 기저 모델을 파인튜닝하면 다음 배포에서 성능이 향상되고, 향상된 모델이 더 나은 데이터 수집을 가능하게 합니다. 사람 개입 없는 자동 라벨링이 루프를 지속 가능하게 만드는 핵심입니다.",
+    stages: ["현장 작업 수행|서가 스캔", "VLM 도서 인식", "카탈로그 대조|자동 라벨링", "실세계 데이터 축적", "모델 파인튜닝", "개선 모델 재배포"],
+    center: "Scanford\n플라이휠",
+    results: "2주간 2,103개 서가 데이터 수집, 도서 식별 정확도 32.0%→71.8%, 영어 OCR 24.8%→46.6%, 중국어 OCR 30.8%→38.0%, 사서 업무 약 18.7시간 절감.",
+    caption: "Scanford: 작업 수행 자체가 데이터 수집이 되고, 카탈로그가 자동 라벨러 역할을 하는 구조"
+  },
+  "logistics": {
+    theme: "robotics", short: "물류 Embodied AI", sub: "World Model 기반 플라이휠",
+    title: "Towards a Data Flywheel for Embodied Intelligence in Logistics",
+    date: "2026-06", arxivId: "2606.05960",
+    meta: "Anlan Yu, Zaishu Chen, Zhiqing Hong, Daqing Zhang · arXiv 2606.05960 · 2026년 6월",
+    venue: "arXiv 2026",
+    citeTier: "신규 (2026) · 인용 축적 단계",
+    evidence: "산업 현장(물류) 특화 데이터 플라이휠을 World Model·합성 데이터와 결합해 설계한 최신 연구. 도메인 특화 플라이휠 설계의 대표 사례로 선정.",
+    summary: "물류 현장에서 학습 기반 로봇 정책의 확장성 문제를 데이터 중심 관점에서 푸는 프레임워크입니다. 매일의 물류 운영(사람 시연, 미라벨 운영 영상, 로봇 로그)을 재사용 가능한 데이터 자산으로 변환하고, World Model로 감독 신호를 생성하며, 배포 피드백을 다시 정책 개선에 반영합니다.",
+    arch: "운영 과정에서 멀티모달 데이터(라벨된 시연·미라벨 영상·로봇 로그)를 수집해 정렬하고, World Model이 롱테일 소포 조작 상황에 대한 감독 신호를 생성합니다. 핵심 기여인 WM-DAgger는 분포 밖(OOD) 상황의 복구 데이터를 합성해 모방학습의 강건성을 높이며, 학습된 정책이 현장에 배포된 뒤 그 피드백이 다시 데이터 수집·정책 개선으로 순환합니다.",
+    stages: ["운영 데이터 수집|시연·영상·로그", "데이터 자산화|정렬·큐레이션", "World Model|감독 신호 생성", "WM-DAgger|OOD 복구데이터 합성", "정책 학습|모방학습", "현장 배포|피드백 환류"],
+    center: "물류\n플라이휠",
+    results: "일상 물류 운영을 학습 데이터 파이프라인으로 전환하는 물류 특화 플라이휠 설계를 제시하고, World Model 기반 합성 감독으로 롱테일 조작 케이스 대응력을 확보.",
+    caption: "물류 플라이휠: 운영 → 자산화 → 세계 모델 감독 → 합성 복구 데이터 → 정책 학습 → 배포 피드백"
+  },
+
+  /* ---------- 자율주행 ---------- */
+  "adsurvey": {
+    theme: "driving", short: "Data-Centric AD Survey", sub: "폐루프 데이터 엔진 조망",
+    title: "Data-Centric Evolution in Autonomous Driving: A Comprehensive Survey of Big Data System, Data Mining, and Closed-Loop Technologies",
+    date: "2024-01", arxivId: "2401.12888",
+    meta: "Lincan Li et al. · arXiv 2401.12888 · 2024년 1월",
+    venue: "arXiv 2024 (서베이)",
+    citeTier: "100+",
+    evidence: "자율주행의 폐루프(closed-loop) 데이터 엔진 기술을 체계적으로 정리한 대표 서베이. 산업계 데이터 엔진(Tesla 등)과 학술 연구를 잇는 조망 논문으로 널리 인용.",
+    summary: "자율주행 성능의 병목이 모델이 아니라 데이터에 있다는 관점에서, 빅데이터 시스템·데이터 마이닝·폐루프 기술을 아우르는 데이터 중심 자율주행의 전체 지형을 정리한 서베이입니다. 수집→라벨링→시나리오 생성→학습→배포 피드백으로 닫히는 데이터 엔진 파이프라인을 분류 체계로 제시합니다.",
+    arch: "서베이가 정리하는 폐루프 데이터 엔진은 다음 순환입니다. 차량 플릿에서 대규모 주행 데이터를 수집하고, 자동 라벨링과 데이터 마이닝으로 가치 있는 코너케이스를 선별하며, 시뮬레이션·생성 모델로 희소 시나리오를 합성합니다. 이 데이터로 모델을 학습·평가해 배포하면, 배포 중 발견되는 실패 사례가 다시 수집 대상을 정하는 기준이 되어 루프가 닫힙니다.",
+    stages: ["플릿 주행 데이터|대규모 수집", "자동 라벨링|데이터 마이닝", "시나리오 생성|시뮬레이션 합성", "모델 학습·평가", "배포·실패 사례|피드백"],
+    center: "AD 폐루프\n데이터 엔진",
+    results: "학술·산업의 폐루프 데이터 시스템을 단일 분류 체계로 정리하고, 코너케이스 마이닝·합성 데이터·자동 라벨링을 자율주행 데이터 엔진의 3대 축으로 제시.",
+    caption: "자율주행 폐루프: 배포 중의 실패가 다음 수집·합성의 기준이 되는 데이터 엔진 구조"
+  },
+  "datasetsafety": {
+    theme: "driving", short: "Dataset Safety in AD", sub: "AI Flywheel × ISO/PAS 8800",
+    title: "Dataset Safety in Autonomous Driving: Requirements, Risks, and Assurance",
+    date: "2025-11", arxivId: "2511.08439",
+    meta: "Abbaspour et al. (Qualcomm) · arXiv 2511.08439 · 2025년 11월",
+    venue: "arXiv 2025 (Qualcomm)",
+    citeTier: "신규 (2025) · 인용 축적 단계",
+    evidence: "데이터 플라이휠을 자동차 AI 안전 국제표준 ISO/PAS 8800과 접목한 유일한 계열의 산업 논문. 표준 기반 안전 보증 관점의 대표 사례로 선정.",
+    summary: "자율주행 AI 인지 시스템의 안전을 데이터셋 수준에서 보증하기 위한 구조적 프레임워크입니다. 'AI 데이터 플라이휠' 개념을 도입해 수집→어노테이션→큐레이션→유지보수의 데이터셋 생애주기를 정의하고, ISO/PAS 8800의 V-모델과 접목했습니다.",
+    arch: "플라이휠은 프로덕션 환경에서 오예측과 라벨링 오류를 식별하는 ML 파이프라인입니다. 감지된 인스턴스는 어노테이션 시스템으로 되돌아가 재라벨링되고, 모델 재학습과 재배포로 이어져 지속 개선 루프를 형성합니다. 그 위에 안전 요구사항 도출→설계→구현→검증→확인→유지보수의 6단계 V-모델 생애주기를 얹고, 완전성·정확성·대표성·추적성 등 ISO/PAS 8800의 안전 속성을 측정 가능한 제약으로 운영화합니다.",
+    stages: ["프로덕션|모니터링", "오예측·라벨오류|식별", "재라벨링|어노테이션 QA", "모델 재학습", "검증·확인 후|재배포"],
+    center: "AI Data\nFlywheel",
+    results: "데이터셋 생애주기·보증 분류체계, ISO/PAS 8800 안전 속성의 측정 가능한 제약화, 안전 요구사항↔데이터셋 KPI 추적성 모델, 안전 분석 사례 연구 제시.",
+    caption: "안전 보증 플라이휠: 루프의 각 회전이 ISO/PAS 8800 V-모델의 검증·확인을 통과해야 재배포"
+  },
+
+  /* ---------- AI 에이전트 · 엔터프라이즈 ---------- */
+  "agentloop": {
+    theme: "agent", short: "Agent-in-the-Loop", sub: "고객지원 LLM 플라이휠",
+    title: "Agent-in-the-Loop: A Data Flywheel for Continuous Improvement in LLM-based Customer Support",
+    date: "2025-10", arxivId: "2510.06674",
+    meta: "Zhao et al. · arXiv 2510.06674 · 2025년 10월",
+    venue: "arXiv 2025 (산업 실증)",
+    citeTier: "신규 (2025) · 인용 축적 단계",
+    evidence: "실제 고객지원 프로덕션에서 4종 피드백을 운영 워크플로에 내장해 플라이휠을 돌린 산업 실증 논문. 재학습 주기를 월 단위에서 주 단위로 단축한 정량 결과로 선정.",
+    summary: "LLM 기반 고객지원 시스템에서, 상담원의 일상 업무 안에 어노테이션을 내장해 지속 개선 루프를 만드는 AITL(Agent-in-the-Loop) 프레임워크입니다. 배치식 어노테이션 대신 운영 중 실시간 피드백으로 데이터 플라이휠을 구동합니다.",
+    arch: "상담원 워크플로에 네 가지 피드백이 내장됩니다: 응답 쌍대 선호(pairwise preference), 제안 채택 여부와 그 근거, 검색된 지식의 관련성 평가, 누락 지식 식별. 이 피드백이 큐레이션을 거쳐 리트리버와 생성 모델의 재학습에 투입되고, 개선된 모델이 프로덕션에 재배포되어 다시 상담원의 피드백을 받는 순환입니다.",
+    stages: ["운영 중 4종 피드백|선호·채택·관련성·공백", "데이터 큐레이션", "리트리버·생성모델|재학습", "프로덕션 재배포", "상담원 워크플로|환류"],
+    center: "AITL\n플라이휠",
+    results: "검색 recall@75 +11.7%, precision@8 +14.8%, 응답 helpfulness +8.4%, 상담원 채택률 +4.5%. 재학습 주기를 수개월에서 수주로 단축.",
+    caption: "AITL: 어노테이션을 별도 작업이 아닌 상담 업무 자체에 내장해 플라이휠 회전 속도를 높임"
+  },
+  "adaptive": {
+    theme: "agent", short: "Adaptive Data Flywheel", sub: "MAPE 제어 루프 × RAG",
+    title: "Adaptive Data Flywheel: Applying MAPE Control Loops to AI Agent Improvement",
+    date: "2025-10", arxivId: "2510.27051",
+    meta: "Shukla et al. (NVIDIA) · arXiv 2510.27051 · EACL 2026 Industry Track",
+    venue: "EACL 2026 Industry",
+    citeTier: "신규 (2025) · 인용 축적 단계",
+    evidence: "3만 명 규모 프로덕션 에이전트에 자율 컴퓨팅의 MAPE 루프를 적용해 정량 성과를 낸 NVIDIA의 산업 논문. EACL 2026 Industry Track 게재로 선정.",
+    summary: "3만 명 이상의 NVIDIA 임직원이 쓰는 사내 지식 어시스턴트 NVInfo AI(Mixture-of-Experts RAG)에 MAPE(Monitor–Analyze–Plan–Execute) 제어 루프를 적용해, 사용자 피드백으로 에이전트를 체계적으로 자가 개선하는 데이터 플라이휠을 운영한 사례 연구입니다.",
+    arch: "Monitor 단계에서 3개월간 사용자 피드백을 추적해 495건의 부정 샘플을 수집하고, Analyze 단계에서 라우팅 오류(5.25%)와 질의 재작성 오류(3.2%)라는 주요 실패 모드를 식별합니다. Plan 단계에서 NeMo 마이크로서비스 기반 표적 파인튜닝을 설계하고, Execute 단계에서 단계적 롤아웃으로 배포합니다. 네 단계가 인간 피드백을 구조화된 개선 신호로 바꾸며 반복 순환합니다.",
+    stages: ["Monitor|피드백 수집·추적", "Analyze|실패 모드 진단", "Plan|표적 파인튜닝 설계", "Execute|단계적 롤아웃"],
+    center: "MAPE\n루프",
+    results: "라우터를 Llama 3.1 70B에서 파인튜닝 8B로 교체해 정확도 96%, 모델 크기 1/10, 지연 70% 개선. 질의 재작성 정확도 +3.7%p, 지연 40% 단축.",
+    caption: "MAPE 플라이휠: 사용자 피드백이 Monitor→Analyze→Plan→Execute를 거쳐 모델 개선으로 환류"
+  },
+  "flyroute": {
+    theme: "agent", short: "FlyRoute", sub: "에이전트 프로파일 자기진화",
+    title: "FlyRoute: Self-Evolving Agent Profiling via Data Flywheel for Adaptive Task Routing",
+    date: "2026-05", arxivId: "2605.22057",
+    meta: "Rongjun Li, Ziyu Zhou, Yihang Wu (Huawei) · arXiv 2605.22057 · 2026년 5월",
+    venue: "arXiv 2026 (Huawei)",
+    citeTier: "신규 (2026) · 인용 축적 단계",
+    evidence: "멀티에이전트 라우팅에 데이터 플라이휠을 적용해 배포 후 진화하는 에이전트 능력을 추적하는 최신 산업 연구. 4개 엔터프라이즈 도메인의 정량 검증으로 선정.",
+    summary: "멀티에이전트 시스템의 라우터가 개발자가 써 둔 정적 설명에 의존하는 문제를 지적하고, 라우팅 증거를 축적해 에이전트 프로파일을 스스로 갱신하는 데이터 플라이휠 FlyRoute를 제안합니다. 배포 후 프롬프트·툴·모델이 바뀌어도 라우팅이 따라 진화합니다.",
+    arch: "에이전트마다 시드 설명, 학습된 설명, 성공 예시 저장소의 3중 프로파일을 유지합니다. 불확실성(성공 예시 수)·BM25 관련성·신규성을 결합한 탐색 정책이 정보가 부족한 에이전트에 질의를 보내 증거를 모으고, 축적된 증거를 LLM 요약으로 증류해 프로파일을 주기적으로 갱신합니다. 갱신된 프로파일과 검색된 성공 예시가 라우팅 정확도를 높이고, 더 나은 라우팅이 더 좋은 증거를 만드는 순환입니다.",
+    stages: ["시드 프로파일|예시 5개", "불확실성 기반|탐색 라우팅", "라우팅 증거 축적", "LLM 요약 증류|프로파일 갱신", "라우팅 정확도 향상"],
+    center: "프로파일\n플라이휠",
+    results: "동일 백본에서 zero-shot 라우터 72.57% → 콜드스타트 78.04% → 7,211개 질의 스트리밍 후 89.83% (+17.26%p). 클라우드·AI 가속기·서버·모바일 OS 4개 도메인에서 일관된 향상.",
+    caption: "FlyRoute: 라우팅 자체가 증거 수집이 되고, 증거가 프로파일을 갱신해 라우팅을 다시 개선"
+  }
+};
+
+/* 연관성 그래프: 엣지 정의 (kind: 'cite' = 계보·직접 인용 관계, 'concept' = 주제·개념 연관) */
+const EDGES = [
+  { from: "star",         to: "selfrewarding", kind: "cite",    note: "자기개선 계보 — Self-Rewarding이 STaR를 직접 계승·인용" },
+  { from: "selfinstruct", to: "selfrewarding", kind: "cite",    note: "자가 생성 데이터 계보 — 직접 인용" },
+  { from: "sam",          to: "sam2",          kind: "cite",    note: "동일 계열 후속 — 데이터 엔진을 비디오로 확장" },
+  { from: "sam",          to: "adsurvey",      kind: "concept", note: "파운데이션 모델 자동 라벨링 개념이 AD 데이터 엔진에 유입" },
+  { from: "mimicgen",     to: "dexflywheel",   kind: "concept", note: "합성 시연 자동 생성 계보" },
+  { from: "autort",       to: "scanford",      kind: "concept", note: "실세계 로봇 플릿을 데이터 수집기로 쓰는 계보" },
+  { from: "dexflywheel",  to: "logistics",     kind: "concept", note: "시뮬레이션·합성 데이터 기반 로봇 플라이휠" },
+  { from: "scanford",     to: "logistics",     kind: "concept", note: "현장 운영을 데이터 자산으로 바꾸는 실세계 플라이휠" },
+  { from: "adsurvey",     to: "datasetsafety", kind: "concept", note: "AD 폐루프 데이터 엔진 → 안전 보증 관점으로 확장" },
+  { from: "selfrewarding",to: "adaptive",      kind: "concept", note: "LLM 자기개선 루프의 프로덕션 운영화" },
+  { from: "adaptive",     to: "agentloop",     kind: "concept", note: "엔터프라이즈 HITL 플라이휠 — 같은 문제의식" },
+  { from: "adaptive",     to: "flyroute",      kind: "concept", note: "에이전트 시스템 자기진화 플라이휠" }
+];
+
+/* =========================================================
+   공통 유틸
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function themeColor(t) { return `var(${THEMES[t].cssVar})`; }
+function svgText(parent, x, y, cls, str, style) {
+  const t = el("text", { x, y, "text-anchor": "middle", class: cls || "" }, parent);
+  if (style) t.setAttribute("style", style);
+  t.textContent = str;
+  return t;
+}
+
+/* 범례 */
+function buildLegend(elId, withLines) {
+  const box = $(elId);
+  for (const key in THEMES) {
+    const s = document.createElement("span");
+    s.innerHTML = `<span class="sw" style="background:${themeColor(key)}"></span>${THEMES[key].label}`;
+    box.appendChild(s);
+  }
+  if (withLines) {
+    const a = document.createElement("span");
+    a.innerHTML = `<span class="ln"></span>계보 · 직접 인용 관계`;
+    const b = document.createElement("span");
+    b.innerHTML = `<span class="ln dash"></span>주제 · 개념 연관`;
+    box.appendChild(a); box.appendChild(b);
+  }
+}
+buildLegend("legend-theme", false);
+buildLegend("legend-time", false);
+buildLegend("legend-graph", true);
+
+/* =========================================================
+   탭 1: 테마 마인드맵
+   ========================================================= */
+const MM = {
+  center: { x: 620, y: 435 },
+  branches: {
+    llm:      { x: 620,  y: 150 },
+    vision:   { x: 955,  y: 245 },
+    agent:    { x: 912,  y: 578 },
+    driving:  { x: 620,  y: 705 },
+    robotics: { x: 332,  y: 435 }
+  },
+  papers: {
+    star:          { x: 290,  y: 70  },
+    selfinstruct:  { x: 620,  y: 58  },
+    selfrewarding: { x: 950,  y: 70  },
+    sam:           { x: 1120, y: 170 },
+    sam2:          { x: 1120, y: 330 },
+    agentloop:     { x: 1120, y: 490 },
+    adaptive:      { x: 1120, y: 610 },
+    flyroute:      { x: 1120, y: 730 },
+    adsurvey:      { x: 380,  y: 800 },
+    datasetsafety: { x: 750,  y: 805 },
+    mimicgen:      { x: 128,  y: 185 },
+    autort:        { x: 112,  y: 310 },
+    dexflywheel:   { x: 112,  y: 435 },
+    scanford:      { x: 112,  y: 560 },
+    logistics:     { x: 128,  y: 685 }
+  }
+};
+
+function buildMindmap() {
+  const svg = $("mindmap");
+  const CW = 218, CH = 68, BW = 190, BH = 52;
+  // 테마별 논문 수
+  const count = {};
+  for (const id in PAPERS) count[PAPERS[id].theme] = (count[PAPERS[id].theme] || 0) + 1;
+
+  // edges first (under nodes)
+  const eg = el("g", {}, svg);
+  for (const t in MM.branches) {
+    const b = MM.branches[t];
+    el("path", {
+      d: `M${MM.center.x},${MM.center.y} C${(MM.center.x + b.x) / 2},${MM.center.y} ${(MM.center.x + b.x) / 2},${b.y} ${b.x},${b.y}`,
+      fill: "none", stroke: themeColor(t), "stroke-width": 2, opacity: 0.55
+    }, eg);
+  }
+  for (const id in MM.papers) {
+    const p = MM.papers[id], t = PAPERS[id].theme, b = MM.branches[t];
+    el("path", {
+      d: `M${b.x},${b.y} C${(b.x + p.x) / 2},${b.y} ${(b.x + p.x) / 2},${p.y} ${p.x},${p.y}`,
+      fill: "none", stroke: themeColor(t), "stroke-width": 2, opacity: 0.55
+    }, eg);
+  }
+
+  // center node
+  const cg = el("g", {}, svg);
+  el("rect", { x: MM.center.x - 104, y: MM.center.y - 45, width: 208, height: 90, rx: 14,
+    style: "fill:var(--surface-1); stroke:var(--text-primary); stroke-width:2" }, cg);
+  svgText(cg, MM.center.x, MM.center.y - 7, "t-center", "Data Flywheel");
+  svgText(cg, MM.center.x, MM.center.y + 16, "t-center-sub", "데이터 플라이휠 · 주요 논문 15편");
+
+  // branch nodes
+  for (const t in MM.branches) {
+    const b = MM.branches[t];
+    const g = el("g", {}, svg);
+    el("rect", { x: b.x - BW / 2, y: b.y - BH / 2, width: BW, height: BH, rx: 12,
+      style: `fill:color-mix(in srgb, ${themeColor(t)} 14%, var(--surface-1)); stroke:${themeColor(t)}; stroke-width:1.5` }, g);
+    svgText(g, b.x, b.y - 4, "t-branch", THEMES[t].label.split(" (")[0]);
+    svgText(g, b.x, b.y + 15, "t-meta", `논문 ${count[t]}편`);
+  }
+
+  // paper nodes
+  for (const id in MM.papers) {
+    const p = MM.papers[id], d = PAPERS[id], t = d.theme;
+    const g = el("g", { class: "paper", role: "button", tabindex: 0,
+      "data-paper": id, "aria-label": d.title + " — 상세 보기" }, svg);
+    el("rect", { x: p.x - CW / 2, y: p.y - CH / 2, width: CW, height: CH, rx: 12,
+      style: `fill:color-mix(in srgb, ${themeColor(t)} 7%, var(--surface-1)); stroke:${themeColor(t)}; stroke-width:1.5` }, g);
+    svgText(g, p.x, p.y - 12, "t-title", d.short);
+    svgText(g, p.x, p.y + 6, "t-sub", d.sub);
+    svgText(g, p.x, p.y + 23, "t-meta", d.date.slice(0, 4) + " · " + d.venue);
+  }
+}
+buildMindmap();
+
+/* =========================================================
+   탭 2: 타임라인
+   ========================================================= */
+function buildTimeline() {
+  const box = $("timeline");
+  const items = Object.entries(PAPERS).sort((a, b) => a[1].date.localeCompare(b[1].date));
+  let curYear = "";
+  for (const [id, d] of items) {
+    const y = d.date.slice(0, 4);
+    if (y !== curYear) {
+      curYear = y;
+      const h = document.createElement("div");
+      h.className = "tl-year"; h.textContent = y + "년";
+      box.appendChild(h);
+    }
+    const btn = document.createElement("button");
+    btn.className = "tl-item";
+    btn.style.setProperty("--dot", themeColor(d.theme));
+    btn.dataset.paper = id;
+    btn.innerHTML = `<span class="m">${parseInt(d.date.slice(5, 7))}월</span>` +
+      `<span><span class="t">${d.short}</span> <span class="d">— ${d.sub}</span></span>` +
+      `<span class="v">${d.venue}</span>`;
+    box.appendChild(btn);
+  }
+}
+buildTimeline();
+
+/* =========================================================
+   탭 3: 연관성 그래프
+   ========================================================= */
+const RG = {
+  hulls: [
+    { theme: "llm",      x: 40,   y: 60,  w: 380, h: 250 },
+    { theme: "vision",   x: 660,  y: 40,  w: 380, h: 160 },
+    { theme: "agent",    x: 770,  y: 230, w: 430, h: 180 },
+    { theme: "robotics", x: 60,   y: 380, w: 610, h: 330 },
+    { theme: "driving",  x: 750,  y: 470, w: 400, h: 200 }
+  ],
+  nodes: {
+    star:          { x: 150,  y: 160 },
+    selfinstruct:  { x: 170,  y: 265 },
+    selfrewarding: { x: 340,  y: 210 },
+    sam:           { x: 760,  y: 120 },
+    sam2:          { x: 960,  y: 120 },
+    agentloop:     { x: 860,  y: 350 },
+    adaptive:      { x: 1000, y: 300 },
+    flyroute:      { x: 1120, y: 360 },
+    mimicgen:      { x: 170,  y: 470 },
+    autort:        { x: 150,  y: 620 },
+    dexflywheel:   { x: 390,  y: 480 },
+    scanford:      { x: 380,  y: 640 },
+    logistics:     { x: 580,  y: 560 },
+    adsurvey:      { x: 830,  y: 560 },
+    datasetsafety: { x: 1040, y: 600 }
+  }
+};
+
+function buildGraph() {
+  const svg = $("relgraph");
+  const defs = el("defs", {}, svg);
+  const mk = el("marker", { id: "g-arrow", viewBox: "0 0 10 10", refX: 9, refY: 5,
+    markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 z", style: "fill:var(--text-muted)" }, mk);
+
+  // cluster hulls
+  for (const h of RG.hulls) {
+    const g = el("g", { style: "pointer-events:none" }, svg);
+    el("rect", { x: h.x, y: h.y, width: h.w, height: h.h, rx: 18,
+      style: `fill:color-mix(in srgb, ${themeColor(h.theme)} 6%, transparent); stroke:color-mix(in srgb, ${themeColor(h.theme)} 45%, transparent); stroke-width:1; stroke-dasharray:none` }, g);
+    const t = svgText(g, 0, 0, "", THEMES[h.theme].label,
+      "font-size:12.5px; font-weight:700; fill:var(--text-secondary);");
+    t.setAttribute("x", h.x + 14); t.setAttribute("y", h.y + 22);
+    t.setAttribute("text-anchor", "start");
+  }
+
+  // edges
+  const R = 13;
+  for (const e of EDGES) {
+    const a = RG.nodes[e.from], b = RG.nodes[e.to];
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+    const ux = dx / len, uy = dy / len;
+    const x1 = a.x + ux * (R + 4), y1 = a.y + uy * (R + 4);
+    const x2 = b.x - ux * (R + 10), y2 = b.y - uy * (R + 10);
+    const mx = (x1 + x2) / 2 - uy * 24, my = (y1 + y2) / 2 + ux * 24;
+    const p = el("path", {
+      d: `M${x1},${y1} Q${mx},${my} ${x2},${y2}`,
+      fill: "none",
+      stroke: e.kind === "cite" ? "var(--text-secondary)" : "var(--text-muted)",
+      "stroke-width": e.kind === "cite" ? 2.2 : 1.6,
+      opacity: e.kind === "cite" ? 0.9 : 0.65,
+      "marker-end": "url(#g-arrow)"
+    }, svg);
+    if (e.kind === "concept") p.setAttribute("stroke-dasharray", "6 5");
+    const title = el("title", {}, p);
+    title.textContent = `${PAPERS[e.from].short} → ${PAPERS[e.to].short}: ${e.note}`;
+  }
+
+  // nodes
+  for (const id in RG.nodes) {
+    const n = RG.nodes[id], d = PAPERS[id];
+    const g = el("g", { class: "gnode", role: "button", tabindex: 0,
+      "data-paper": id, "aria-label": d.title + " — 상세 보기" }, svg);
+    el("circle", { cx: n.x, cy: n.y, r: 16,
+      style: "fill:var(--surface-1)" }, g);
+    el("circle", { class: "core", cx: n.x, cy: n.y, r: 13,
+      style: `fill:color-mix(in srgb, ${themeColor(d.theme)} 30%, var(--surface-1)); stroke:${themeColor(d.theme)}; stroke-width:2.5` }, g);
+    const lbl = svgText(g, n.x, n.y + 34, "", d.short,
+      "font-size:13px; font-weight:650; fill:var(--text-primary);");
+    const sub = svgText(g, n.x, n.y + 50, "", d.date.slice(0, 4),
+      "font-size:11px; fill:var(--text-muted);");
+    // 투명 히트 타깃: 원·라벨·간극 전체를 클릭 가능하게
+    el("rect", { x: n.x - 80, y: n.y - 22, width: 160, height: 80,
+      style: "fill:transparent; pointer-events:all" }, g);
+    const title = el("title", {}, g);
+    title.textContent = d.title;
+  }
+}
+buildGraph();
+
+/* =========================================================
+   목록 + 푸터
+   ========================================================= */
+function buildList() {
+  const box = $("paper-list");
+  const items = Object.entries(PAPERS).sort((a, b) => a[1].date.localeCompare(b[1].date));
+  for (const [id, d] of items) {
+    const btn = document.createElement("button");
+    btn.className = "paper-row";
+    btn.style.setProperty("--bc", themeColor(d.theme));
+    btn.dataset.paper = id;
+    btn.innerHTML = `<span class="rt">${d.title}</span>` +
+      `<span class="rm">arXiv ${d.arxivId} · ${d.venue}</span>`;
+    box.appendChild(btn);
+  }
+}
+buildList();
+$("foot-note").textContent = "출처: 각 논문의 arXiv 초록·공개 페이지 (2026-08-19 확인). " + CITE_NOTE +
+  " 연관성 그래프의 실선은 계보·직접 인용 관계, 점선은 주제·개념적 연관(편집상 판단)을 나타냅니다.";
+
+/* =========================================================
+   순환 다이어그램 생성기
+   ========================================================= */
+function cycleDiagram(stages, colorVar, centerLabel) {
+  const W = 760, H = 430, cx = W / 2, cy = H / 2;
+  const rx = 268, ry = 148;
+  const n = stages.length;
+  const boxW = 172, boxH = 52;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "플라이휠 순환 구조: " + stages.map(s => s.replace("|", " ")).join(" → ") + " → (반복)");
+
+  const defs = el("defs", {}, svg);
+  const mk = el("marker", { id: "arrow-head", viewBox: "0 0 10 10", refX: 8, refY: 5,
+    markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 z", fill: `var(${colorVar})` }, mk);
+
+  const pos = [];
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+    pos.push({ x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a), a });
+  }
+  for (let i = 0; i < n; i++) {
+    const a1 = pos[i].a, a2 = pos[(i + 1) % n].a;
+    const trim = 0.34;
+    const start = a1 + trim;
+    let end = a2 - trim;
+    if (end < start) end += 2 * Math.PI;
+    const steps = 14;
+    let d = "";
+    for (let s = 0; s <= steps; s++) {
+      const t = start + ((end - start) * s) / steps;
+      d += (s === 0 ? "M" : "L") + (cx + rx * Math.cos(t)).toFixed(1) + "," + (cy + ry * Math.sin(t)).toFixed(1);
+    }
+    el("path", { d, fill: "none", stroke: `var(${colorVar})`, "stroke-width": 2,
+      opacity: 0.75, "marker-end": "url(#arrow-head)" }, svg);
+  }
+  const cLines = centerLabel.split("\n");
+  const cg = el("g", {}, svg);
+  el("circle", { cx, cy, r: 56,
+    fill: `color-mix(in srgb, var(${colorVar}) 10%, var(--surface-1))`,
+    stroke: `var(${colorVar})`, "stroke-width": 1.5 }, cg);
+  cLines.forEach((ln, i) => {
+    svgText(cg, cx, cy + (i - (cLines.length - 1) / 2) * 19 + 5, "", ln,
+      "font-size:15px; font-weight:700; fill:var(--text-primary);");
+  });
+  pos.forEach((p, i) => {
+    const lines = stages[i].split("|");
+    const g = el("g", {}, svg);
+    el("rect", { x: p.x - boxW / 2, y: p.y - boxH / 2, width: boxW, height: boxH, rx: 10,
+      fill: `color-mix(in srgb, var(${colorVar}) 8%, var(--surface-1))`,
+      stroke: `var(${colorVar})`, "stroke-width": 1.5 }, g);
+    lines.forEach((ln, j) => {
+      svgText(g, p.x, p.y + (j - (lines.length - 1) / 2) * 16 + 4.5, "", ln,
+        `font-size:${j === 0 ? 13 : 11.5}px; font-weight:${j === 0 ? 650 : 400}; fill:var(${j === 0 ? "--text-primary" : "--text-secondary"});`);
+    });
+    el("circle", { cx: p.x - boxW / 2 + 1, cy: p.y - boxH / 2 + 1, r: 11, fill: `var(${colorVar})` }, g);
+    svgText(g, p.x - boxW / 2 + 1, p.y - boxH / 2 + 5, "", String(i + 1),
+      "font-size:11px; font-weight:700; fill:#ffffff;");
+  });
+  return svg;
+}
+
+/* =========================================================
+   모달
+   ========================================================= */
+const overlay = $("overlay");
+let lastFocus = null;
+
+function openPaper(id) {
+  const p = PAPERS[id];
+  if (!p) return;
+  const th = THEMES[p.theme];
+  $("m-dot").style.background = themeColor(p.theme);
+  $("m-branch").textContent = th.label;
+  $("m-title").textContent = p.title;
+  $("m-meta").textContent = p.meta;
+  const links = $("m-links");
+  links.innerHTML = "";
+  const mkLink = (href, label) => {
+    const a = document.createElement("a");
+    a.href = href; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = label;
+    links.appendChild(a);
+  };
+  mkLink(`https://arxiv.org/abs/${p.arxivId}`, "arXiv에서 논문 보기 ↗");
+  mkLink(`https://api.semanticscholar.org/arXiv:${p.arxivId}`, "Semantic Scholar (인용 확인) ↗");
+  $("m-metric").innerHTML =
+    `게재: <b>${p.venue}</b> &nbsp;·&nbsp; 인용 지표: <b>${p.citeTier}</b>` +
+    `<div style="margin-top:6px">${p.evidence}</div>` +
+    `<div class="metric-note">${CITE_NOTE}</div>`;
+  $("m-summary").textContent = p.summary;
+  $("m-arch").textContent = p.arch;
+  $("m-results").textContent = p.results;
+  $("m-caption").textContent = p.caption;
+  const holder = $("m-diagram");
+  holder.innerHTML = "";
+  holder.appendChild(cycleDiagram(p.stages, THEMES[p.theme].cssVar, p.center));
+  lastFocus = document.activeElement;
+  overlay.classList.add("open");
+  $("m-close").focus();
+  document.body.style.overflow = "hidden";
+}
+function closeModal() {
+  overlay.classList.remove("open");
+  document.body.style.overflow = "";
+  if (lastFocus) lastFocus.focus();
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-paper]");
+  if (t) openPaper(t.dataset.paper);
+});
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.closest && e.target.closest("[data-paper]")) {
+    e.preventDefault();
+    openPaper(e.target.closest("[data-paper]").dataset.paper);
+  }
+  if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+});
+$("m-close").addEventListener("click", e => { e.stopPropagation(); closeModal(); });
+overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(); });
+
+/* =========================================================
+   탭 전환
+   ========================================================= */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.setAttribute("aria-selected", b === btn ? "true" : "false"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === btn.dataset.panel));
+  });
+});
+</script>
+</body>
+</html>
