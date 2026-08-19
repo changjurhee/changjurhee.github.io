@@ -204,6 +204,15 @@
     padding: 13px 16px; font-size: 0.88rem; color: var(--text-secondary);
   }
   .starter-box b { color: var(--text-primary); }
+  .tool-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  .tool-table th { text-align: left; color: var(--text-muted); font-size: 0.76rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 10px; border-bottom: 1px solid var(--baseline); }
+  .tool-table td { padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; color: var(--text-secondary); }
+  .tool-table td:first-child { color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+  .tool-table tr.cat td { font-weight: 750; color: var(--text-primary); padding: 18px 10px 6px;
+    border-bottom: 2px solid var(--baseline); font-size: 0.9rem; }
+  .tool-table a { color: var(--text-primary); text-decoration: underline; text-underline-offset: 2px; }
+  .tool-table .lic-note { display: block; font-size: 0.76rem; color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -251,6 +260,16 @@
 
       <h3 class="stack-h" style="margin-top:26px;">테마별 차별 스택 — 공통 코어 위에 얹는 것</h3>
       <div class="stack-grid" id="stack-cards"></div>
+
+      <h3 class="stack-h" style="margin-top:26px;">도구 인덱스 — 라이선스 · 공식 링크</h3>
+      <p class="stack-p">도구 이름을 클릭하면 공식 페이지가 열립니다. 라이선스는 코어 저장소 기준(2026-08-19 확인)이며, 배포판·클라우드 관리형 서비스는 조건이 다를 수 있습니다. 카피레프트(AGPL)와 상용 항목은 별도 표기했습니다.</p>
+      <div style="overflow-x:auto;">
+        <table class="tool-table" id="tool-table">
+          <thead><tr><th style="width:22%">도구</th><th style="width:38%">용도</th><th style="width:24%">라이선스</th><th>유형</th></tr></thead>
+          <tbody id="tool-tbody"></tbody>
+        </table>
+      </div>
+      <p class="stack-p" style="font-size:0.78rem; color:var(--text-muted); margin-top:8px;">DeepSpeed · Langfuse · distilabel · WebDataset은 GitHub 저장소의 LICENSE 파일로 직접 확인(2026-08-19), 나머지는 각 프로젝트 공식 저장소·문서의 공표 라이선스 기준입니다.</p>
 
       <div class="starter-box">
         <b>작게 시작하는 최소 조합(제안)</b> — 스토리지 S3(또는 MinIO)+Parquet, 오케스트레이션 Dagster(또는 Airflow), 라벨링 Label Studio, 학습 PyTorch+PEFT(LoRA), 실험·게이트 MLflow(또는 W&B), 서빙 vLLM(LLM)/Triton(비전·로봇), 관측·피드백 Langfuse. 이 7개면 플라이휠 한 바퀴가 완성되며, 각 자리는 규모가 커질 때 관리형(Databricks·SageMaker·Vertex AI·NVIDIA NeMo 제품군)으로 교체하면 됩니다.
@@ -897,6 +916,92 @@ function stackDiagram() {
   });
 }
 stackDiagram();
+
+const TOOL_INDEX = [
+  { cat: "① 수집 · 로깅", items: [
+    ["Apache Kafka", "https://kafka.apache.org", "이벤트 스트리밍 · 로그/피드백 수집", "Apache-2.0", "오픈소스"],
+    ["OpenTelemetry", "https://opentelemetry.io", "표준 텔레메트리(트레이스·메트릭·로그)", "Apache-2.0", "오픈소스"]
+  ]},
+  { cat: "② 저장 · 버전 관리", items: [
+    ["Apache Parquet", "https://parquet.apache.org", "컬럼형 데이터 파일 포맷", "Apache-2.0", "오픈소스"],
+    ["Apache Iceberg", "https://iceberg.apache.org", "레이크하우스 테이블 포맷", "Apache-2.0", "오픈소스"],
+    ["MinIO", "https://min.io", "S3 호환 오브젝트 스토리지", "AGPL-3.0", "오픈소스 · 카피레프트 주의(상용 배포 시 법무 검토)"],
+    ["Amazon S3", "https://aws.amazon.com/s3/", "관리형 오브젝트 스토리지", "—", "상용 관리형"],
+    ["lakeFS", "https://lakefs.io", "데이터 레이크 버전 관리(git 방식)", "Apache-2.0", "오픈소스"],
+    ["DVC", "https://dvc.org", "데이터·모델 버전 관리", "Apache-2.0", "오픈소스"],
+    ["Hugging Face Hub", "https://huggingface.co", "데이터셋·모델 레지스트리", "클라이언트 Apache-2.0", "오픈소스 SDK + 호스팅 서비스"]
+  ]},
+  { cat: "③ 큐레이션 · 마이닝", items: [
+    ["FAISS", "https://github.com/facebookresearch/faiss", "벡터 유사도 검색 라이브러리", "MIT", "오픈소스"],
+    ["Milvus", "https://milvus.io", "벡터 데이터베이스", "Apache-2.0", "오픈소스"],
+    ["NeMo Curator", "https://github.com/NVIDIA/NeMo-Curator", "대규모 데이터 큐레이션(중복 제거·필터)", "Apache-2.0", "오픈소스"],
+    ["FiftyOne", "https://voxel51.com/fiftyone/", "비전 데이터셋 검수·큐레이션", "Apache-2.0", "오픈소스 + 상용 Teams"],
+    ["CLIP", "https://github.com/openai/CLIP", "이미지-텍스트 임베딩(큐레이션용)", "MIT", "오픈소스"],
+    ["DINOv2", "https://github.com/facebookresearch/dinov2", "자기지도 비전 임베딩", "Apache-2.0", "오픈소스"]
+  ]},
+  { cat: "④ 라벨링 (모델 보조)", items: [
+    ["Label Studio", "https://labelstud.io", "범용 어노테이션 플랫폼", "Apache-2.0", "오픈소스 + 상용 Enterprise"],
+    ["CVAT", "https://www.cvat.ai", "비전(이미지·비디오) 어노테이션", "MIT", "오픈소스 + 상용 클라우드"],
+    ["Argilla", "https://argilla.io", "LLM 선호·피드백 데이터 관리", "Apache-2.0", "오픈소스"]
+  ]},
+  { cat: "⑤ 합성 · 증강", items: [
+    ["MuJoCo", "https://mujoco.org", "물리 시뮬레이터(로봇)", "Apache-2.0", "오픈소스 (DeepMind)"],
+    ["Isaac Lab", "https://github.com/isaac-sim/IsaacLab", "로봇 학습 프레임워크", "BSD-3-Clause", "오픈소스"],
+    ["NVIDIA Isaac Sim", "https://developer.nvidia.com/isaac/sim", "로봇 시뮬레이션(Omniverse 기반)", "독점 라이선스", "무료 사용 가능 · 상용 제품군"],
+    ["CARLA", "https://carla.org", "자율주행 시뮬레이터", "MIT", "오픈소스 (UE 엔진 라이선스 별도)"],
+    ["distilabel", "https://github.com/argilla-io/distilabel", "LLM 합성 데이터 파이프라인", "Apache-2.0", "오픈소스"],
+    ["WebDataset", "https://github.com/webdataset/webdataset", "대규모 스트리밍 데이터셋 포맷", "BSD-3-Clause", "오픈소스"]
+  ]},
+  { cat: "⑥ 학습 · 파인튜닝", items: [
+    ["PyTorch", "https://pytorch.org", "딥러닝 프레임워크", "BSD-3-Clause", "오픈소스"],
+    ["Ray", "https://www.ray.io", "분산 학습·튜닝·서빙", "Apache-2.0", "오픈소스 + 상용 Anyscale"],
+    ["DeepSpeed", "https://www.deepspeed.ai", "대규모 분산 학습 최적화", "Apache-2.0", "오픈소스"],
+    ["PEFT", "https://github.com/huggingface/peft", "LoRA 등 경량 파인튜닝", "Apache-2.0", "오픈소스"],
+    ["TRL", "https://github.com/huggingface/trl", "DPO · RLHF 등 선호 학습", "Apache-2.0", "오픈소스"],
+    ["LeRobot", "https://github.com/huggingface/lerobot", "로봇 데이터셋·정책 학습", "Apache-2.0", "오픈소스"]
+  ]},
+  { cat: "⑦ 평가 · 게이트", items: [
+    ["lm-evaluation-harness", "https://github.com/EleutherAI/lm-evaluation-harness", "LLM 벤치마크 하네스", "MIT", "오픈소스"],
+    ["MLflow", "https://mlflow.org", "실험 추적 · 모델 레지스트리", "Apache-2.0", "오픈소스"],
+    ["Weights & Biases", "https://wandb.ai", "실험 추적·평가 대시보드", "SDK MIT", "상용 SaaS (셀프호스팅 옵션)"]
+  ]},
+  { cat: "⑧ 배포 · 관측", items: [
+    ["vLLM", "https://github.com/vllm-project/vllm", "LLM 고속 서빙", "Apache-2.0", "오픈소스"],
+    ["Triton Inference Server", "https://github.com/triton-inference-server/server", "범용 모델 서빙(비전·로봇 포함)", "BSD-3-Clause", "오픈소스"],
+    ["Kubernetes", "https://kubernetes.io", "컨테이너 오케스트레이션 · 카나리 배포", "Apache-2.0", "오픈소스"],
+    ["Langfuse", "https://langfuse.com", "LLM 관측 · 피드백 수집", "MIT (코어)", "오픈소스 · ee/ 폴더는 별도 상용 라이선스"],
+    ["LangSmith", "https://smith.langchain.com", "LLM 관측·평가 SaaS", "—", "상용 관리형"],
+    ["NeMo Guardrails", "https://github.com/NVIDIA/NeMo-Guardrails", "LLM 가드레일", "Apache-2.0", "오픈소스"],
+    ["NeMo 마이크로서비스", "https://developer.nvidia.com/nemo-microservices", "커스터마이저·이밸류에이터 (Adaptive 논문 스택)", "—", "상용 (NVIDIA AI Enterprise)"],
+    ["pgvector", "https://github.com/pgvector/pgvector", "PostgreSQL 벡터 검색 확장", "PostgreSQL License", "오픈소스"]
+  ]},
+  { cat: "축 — 오케스트레이션 · 파이프라인", items: [
+    ["Apache Airflow", "https://airflow.apache.org", "워크플로 오케스트레이션", "Apache-2.0", "오픈소스"],
+    ["Dagster", "https://dagster.io", "데이터 자산 중심 오케스트레이션", "Apache-2.0", "오픈소스 + 상용 Cloud"],
+    ["Flyte", "https://flyte.org", "ML 특화 워크플로", "Apache-2.0", "오픈소스"]
+  ]},
+  { cat: "도메인 공통 기타", items: [
+    ["ROS 2", "https://www.ros.org", "로봇 미들웨어·텔레메트리", "Apache-2.0 (코어)", "오픈소스"],
+    ["ASAM OpenSCENARIO", "https://www.asam.net/standards/detail/openscenario/", "주행 시나리오 기술 표준", "ASAM 표준 문서", "표준 (회원제·문서 공개)"]
+  ]}
+];
+
+function buildToolTable() {
+  const tbody = $("tool-tbody");
+  for (const grp of TOOL_INDEX) {
+    const trc = document.createElement("tr");
+    trc.className = "cat";
+    trc.innerHTML = `<td colspan="4">${grp.cat}</td>`;
+    tbody.appendChild(trc);
+    for (const [name, url, use, lic, type] of grp.items) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><a href="${url}" target="_blank" rel="noopener">${name} ↗</a></td>` +
+        `<td>${use}</td><td>${lic}</td><td>${type}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+}
+buildToolTable();
 
 function buildStackCards() {
   const box = $("stack-cards");
