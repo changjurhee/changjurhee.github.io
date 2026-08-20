@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퀀트 × AI 기술 스택 논문 맵</title>
+<style>
+  :root{
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --surface-page:   #f9f9f7;
+    --surface-card:   #ffffff;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+
+    --c0: #2a78d6; /* 종합 서베이 - blue */
+    --c1: #eb6834; /* 팩터모델 - orange */
+    --c2: #1baf7a; /* 시계열 파운데이션모델 - aqua */
+    --c3: #eda100; /* 시장예측 아키텍처(GNN/Transformer) - yellow */
+    --c4: #e87ba4; /* RL 트레이딩 - magenta */
+    --c5: #008300; /* 금융 NLP/센티먼트 - green */
+    --c6: #4a3aa7; /* LLM 에이전트 - violet */
+    --c7: #e34948; /* 백테스트/평가 - red */
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --surface-page:   #0d0d0d;
+    --surface-card:   #202020;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+
+    --c0: #3987e5;
+    --c1: #d95926;
+    --c2: #199e70;
+    --c3: #c98500;
+    --c4: #d55181;
+    --c5: #008300;
+    --c6: #9085e9;
+    --c7: #e66767;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--surface-page);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  .app{max-width:1180px;margin:0 auto;padding:20px 20px 60px;}
+  header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:6px;}
+  h1{font-size:20px;margin:0 0 4px;}
+  .subtitle{color:var(--text-secondary);font-size:13px;margin:0;}
+  .theme-toggle{
+    border:1px solid var(--border);background:var(--surface-card);color:var(--text-primary);
+    border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap;
+  }
+  nav.tabs{
+    display:flex;gap:4px;margin:18px 0 16px;border-bottom:1px solid var(--gridline);
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    appearance:none;border:none;background:transparent;color:var(--text-secondary);
+    font-size:13px;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;
+    white-space:nowrap;
+  }
+  nav.tabs button[aria-selected="true"]{color:var(--text-primary);border-bottom-color:var(--c0);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .card{
+    background:var(--surface-card);border:1px solid var(--border);border-radius:12px;
+    padding:16px;
+  }
+  .legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin:0 0 14px;font-size:12px;color:var(--text-secondary);}
+  .legend .item{display:flex;align-items:center;gap:6px;}
+  .legend .swatch{width:10px;height:10px;border-radius:3px;flex:none;}
+  .hint{font-size:12px;color:var(--text-muted);margin:8px 0 0;}
+  svg text{font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--text-primary);}
+  svg .muted-text{fill:var(--text-secondary);}
+  .node-label{font-size:10px;pointer-events:none;}
+  .cat-label{font-size:12px;font-weight:700;pointer-events:none;}
+  .leaf{cursor:pointer;}
+  .leaf circle{stroke:var(--surface-1);stroke-width:2px;}
+  .leaf:hover circle, .leaf:focus circle{stroke:var(--text-primary);}
+  .leaf:focus{outline:none;}
+  .edge{stroke:var(--text-muted);stroke-opacity:.35;fill:none;}
+  .edge.dim{stroke-opacity:.06;}
+  .edge.hi{stroke-opacity:.85;stroke-width:1.6;}
+  .net-node circle{stroke:var(--surface-1);stroke-width:1.5px;cursor:pointer;}
+  .net-node.dim{opacity:.15;}
+  .net-node text{font-size:9px;}
+  .tooltip{
+    position:fixed;pointer-events:none;z-index:50;
+    background:var(--text-primary);color:var(--surface-1);
+    font-size:12px;line-height:1.4;padding:8px 10px;border-radius:8px;max-width:280px;
+    box-shadow:0 4px 16px rgba(0,0,0,.25);
+    opacity:0;transition:opacity .08s ease;
+  }
+  .tooltip b{display:block;margin-bottom:2px;}
+  .tooltip .meta{color:var(--baseline);font-size:11px;}
+  .tooltip .hint2{color:var(--baseline);font-size:10px;margin-top:4px;font-style:italic;}
+
+  table.lic{width:100%;border-collapse:collapse;font-size:13px;}
+  table.lic th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.02em;
+    color:var(--text-muted);border-bottom:1px solid var(--gridline);padding:8px 10px;
+  }
+  table.lic td{padding:10px;border-bottom:1px solid var(--gridline);vertical-align:top;}
+  table.lic tr:last-child td{border-bottom:none;}
+  .badge{
+    display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;
+    border:1px solid var(--border);white-space:nowrap;
+  }
+  .basis-tag{
+    display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;
+    border:1px solid var(--border);
+  }
+  .basis-taxonomy{border-style:dashed;color:var(--text-muted);}
+  .basis-citation, .basis-venue, .basis-novelty, .basis-adoption{color:var(--c2);border-color:var(--c2);}
+  .cat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+  .repo-link{color:var(--c0);text-decoration:none;font-size:12px;}
+  .repo-link:hover{text-decoration:underline;}
+  .stack-desc{color:var(--text-secondary);font-size:12px;margin-top:3px;}
+  footer.note{margin-top:22px;font-size:11px;color:var(--text-muted);line-height:1.6;}
+
+  /* ---- Modal ---- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    opacity:0;pointer-events:none;transition:opacity .12s ease;
+  }
+  .modal-overlay.open{opacity:1;pointer-events:auto;}
+  .modal-card{
+    background:var(--surface-card);color:var(--text-primary);border-radius:14px;
+    max-width:640px;width:100%;max-height:86vh;overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    transform:translateY(8px);transition:transform .12s ease;
+  }
+  .modal-overlay.open .modal-card{transform:translateY(0);}
+  .modal-head{padding:20px 22px 14px;border-bottom:1px solid var(--gridline);position:relative;}
+  .modal-close{
+    position:absolute;top:14px;right:16px;border:none;background:transparent;color:var(--text-muted);
+    font-size:20px;cursor:pointer;line-height:1;padding:4px;
+  }
+  .modal-close:hover{color:var(--text-primary);}
+  .modal-theme-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-bottom:8px;}
+  .modal-theme-tag .dot{width:9px;height:9px;border-radius:50%;}
+  .modal-title{font-size:17px;font-weight:700;margin:0 0 6px;line-height:1.4;padding-right:24px;}
+  .modal-meta{font-size:12px;color:var(--text-secondary);margin:0 0 12px;}
+  .modal-links{display:flex;gap:8px;flex-wrap:wrap;}
+  .modal-links a{
+    font-size:12px;font-weight:600;color:var(--text-primary);text-decoration:none;
+    border:1px solid var(--border);padding:6px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;
+  }
+  .modal-links a:hover{background:var(--gridline);}
+  .modal-body{padding:16px 22px 22px;}
+  .modal-body h3{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);margin:18px 0 6px;}
+  .modal-body h3:first-child{margin-top:0;}
+  .modal-body p{font-size:13.5px;line-height:1.65;margin:0;color:var(--text-primary);}
+  .metric-box{
+    background:var(--surface-page);border:1px solid var(--border);border-radius:10px;padding:12px 14px;
+    display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px;
+  }
+  .metric-box dt{color:var(--text-muted);font-weight:600;white-space:nowrap;}
+  .metric-box dd{margin:0;color:var(--text-primary);}
+  @media (max-width:560px){
+    .metric-box{grid-template-columns:1fr;}
+    .metric-box dt{margin-top:6px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>퀀트 × AI 기술 스택 논문 맵</h1>
+      <p class="subtitle">34편 논문 · 4개 대분류 / 10개 테마 · 2026-08-20 기준 리서치 초안 (초록 본문을 직접 확인한 논문만 포함)</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle">다크 모드</button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="mindmap">테마별 마인드맵</button>
+    <button role="tab" aria-selected="false" data-tab="timeline">시간별 타임라인</button>
+    <button role="tab" aria-selected="false" data-tab="network">논문 간 연관성</button>
+    <button role="tab" aria-selected="false" data-tab="stack">기술스택 (라이센스)</button>
+  </nav>
+
+  <div class="panel active" id="panel-mindmap">
+    <div class="card">
+      <div class="legend" id="legend-mindmap"></div>
+      <svg id="svg-mindmap" viewBox="0 0 1320 1020" width="100%" style="max-height:1020px"></svg>
+      <p class="hint"><strong>3단 구조</strong>: 중심 → 4개 <strong>대분류</strong>(굵은 색 라벨) → 10개 <strong>테마</strong>(회색 라벨) → 개별 논문(원). 상위 3개 대분류(예측·의사결정·지식증강)는 Liu 2024 서베이(arXiv:2411.12747)가 제시한 분류축을 그대로 채택했고, 어느 축에도 종속되지 않는 항목을 "횡단 관심사"로 따로 묶었습니다. 마우스를 올리면 미리보기가, <strong>클릭하면 학술 지표·요약·핵심 방법론·주요 결과를 담은 상세 카드</strong>가 열립니다.</p>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-timeline">
+    <div class="card">
+      <div class="legend" id="legend-timeline"></div>
+      <svg id="svg-timeline" viewBox="0 0 1100 760" width="100%" style="max-height:760px"></svg>
+      <p class="hint">가로축은 발표 연도(2014–2026), 세로 레인은 테마이며 왼쪽 색 띠가 4개 대분류를 묶습니다. 2025년 이후 지식증강(LLM 에이전트)·예측(시계열FM) 대역에 논문이 몰려 있는 반면, <strong>횡단 관심사</strong>는 2014년 백테스트 과적합 논문에서 2026년 재현성 서베이까지 12년에 걸쳐 얇고 길게 이어집니다 — 성능 경쟁과 검증·인프라 축의 시간 리듬이 다르다는 점이 드러납니다. 점을 클릭하면 상세 카드가 열립니다.</p>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-network">
+    <div class="card">
+      <div class="legend" id="legend-network"></div>
+      <svg id="svg-network" viewBox="0 0 1100 700" width="100%" style="max-height:700px"></svg>
+      <p class="hint">노드 크기는 다른 논문과의 연결 수(허브 정도)를 나타냅니다. 서베이 논문이 자연스럽게 허브 역할을 합니다. 연결선은 "다룬다/포함한다/확장한다/결합한다" 등 서술적 관계이며, 정식 인용 그래프가 아닌 주제적 연관성을 근거로 제가 직접 구성한 것입니다.</p>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-stack">
+    <div class="card">
+      <table class="lic">
+        <thead>
+          <tr><th>레이어</th><th>프로젝트</th><th>라이선스</th><th>설명 / 스택</th><th></th></tr>
+        </thead>
+        <tbody id="stack-body"></tbody>
+      </table>
+      <p class="hint">위 오픈소스 프로젝트들은 각 레이어를 대표하는 실제 구현체입니다. 라이선스는 2026-08-20 기준 각 GitHub 저장소의 LICENSE 파일을 확인한 결과입니다. vectorbt는 소스는 공개되어 있으나 "이 소프트웨어 자체를 상품화해 재판매"하는 것을 금지하는 Commons Clause가 Apache-2.0에 덧붙어 있어 순수 OSI 오픈소스는 아닙니다.</p>
+    </div>
+  </div>
+
+  <footer class="note">
+    출처: arXiv, ACM Digital Library, SSRN, ScienceDirect, MDPI, Semantic Scholar, scispace, GitHub (각 논문 카드/저장소 링크 참고). 이 맵은 2026-08-20 웹 서치를 기반으로 한 초안이며, 인용 관계는 정식 인용 그래프가 아니라 주제 연관성을 근거로 임의 구성했습니다. <strong>포함 기준</strong>: 초록 원문을 직접 확인한 논문만 등재 — 제목·게재처만 확인되고 초록에 접근하지 못한 논문은 제외했습니다. <strong>판단 근거 유형</strong>(각 카드에 표시): 인용수가 확인되는 논문은 인용수 기준(citation)으로, 확인되지 않는 최신 논문은 대신 ①심사 통과 저널·학회 게재 여부(venue), ②초록이 명시하는 최초시도 주장(novelty), ③오픈소스 실채택 등 독립적 신호(adoption)로 판단했고, 이 중 어느 신호도 없는 논문은 "분류체계상 포함(중요도 미검증)"이라고 정직하게 표시했습니다 — 즉 이 맵에 있다고 해서 그 논문이 검증된 중요도를 갖는다는 뜻은 아닙니다.
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <button class="modal-close" id="modalClose" aria-label="닫기">&times;</button>
+      <div class="modal-theme-tag" id="modalThemeTag"></div>
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <p class="modal-meta" id="modalMeta"></p>
+      <div class="modal-links" id="modalLinks"></div>
+    </div>
+    <div class="modal-body">
+      <h3>학술 지표 · 선정 근거</h3>
+      <dl class="metric-box" id="modalMetric"></dl>
+      <h3>요약</h3>
+      <p id="modalSummary"></p>
+      <h3>핵심 방법론</h3>
+      <p id="modalArch"></p>
+      <h3>주요 결과</h3>
+      <p id="modalResults"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- Data ---------------- */
+// 대분류(축): Liu 2024 "A Survey of Financial AI"(arXiv:2411.12747)가 제시한
+// 3차원(예측 / 의사결정 / 지식증강)을 상위 축으로 채택하고, 어느 한 축에도
+// 속하지 않고 전 층을 관통하는 항목을 "횡단 관심사"로 별도 분리했다.
+const groups = [
+  {id:0, key:'c0', name:'예측 (Predictive)',            short:'예측',
+   note:'시장의 미래 상태를 추정하는 층. Liu 서베이의 1차원.'},
+  {id:1, key:'c1', name:'의사결정 (Decision-making)',   short:'의사결정',
+   note:'추정된 시그널을 매매·배분 행동으로 바꾸는 층. Liu 서베이의 2차원.'},
+  {id:2, key:'c2', name:'지식증강 (Knowledge Aug.)',    short:'지식증강',
+   note:'비정형 정보(뉴스·공시)를 해석하고 자율 리서치로 확장하는 층. Liu 서베이의 3차원.'},
+  {id:3, key:'c3', name:'횡단 관심사 (Cross-cutting)',  short:'횡단',
+   note:'Liu의 3차원 어디에도 종속되지 않고 모든 층에 동시에 적용되는 축 — 이 맵에서 추가한 4번째 그룹.'},
+];
+
+const categories = [
+  {id:0, group:3, name:'종합 서베이',              short:'서베이'},
+  {id:1, group:0, name:'팩터모델 · 자산가격결정',   short:'팩터모델'},
+  {id:2, group:0, name:'시계열 파운데이션 모델',     short:'시계열FM'},
+  {id:3, group:0, name:'시장예측 아키텍처(GNN/Transformer)', short:'GNN/Transformer'},
+  {id:4, group:1, name:'강화학습 트레이딩·포트폴리오', short:'RL 트레이딩'},
+  {id:5, group:2, name:'금융 NLP · 센티먼트',        short:'금융NLP'},
+  {id:6, group:2, name:'LLM 에이전트 · 멀티에이전트', short:'LLM 에이전트'},
+  {id:7, group:3, name:'백테스트 · 평가방법론',       short:'백테스트/평가'},
+  {id:8, group:3, name:'설명가능 AI (XAI) · 해석가능성', short:'XAI'},
+  {id:9, group:3, name:'프로덕션 엔지니어링 · 재현성',   short:'엔지니어링'},
+];
+// 논문 색상은 소속 "대분류"를 따른다 (팔레트 4슬롯, 검증 통과).
+categories.forEach(c => { c.key = groups[c.group].key; });
+
+// year: decimal (YYYY + month/12) for x-positioning
+const papers = [
+  {id:'s1', cat:0, year:2025.25, title:'From Deep Learning to LLMs: A Survey of AI in Quantitative Investment', short:'DL→LLM 퀀트투자 서베이',
+    authors:'Bokai Cao, Saizhuo Wang, Xinyi Lin, Xiaojun Wu, Haohan Zhang, Lionel M. Ni, Jian Guo', venue:'arXiv preprint, 2025-03', arxivId:'2503.21422',
+    desc:'전통 DL부터 최신 LLM까지 퀀트 투자 AI 전체를 조망하는 서베이',
+    summary:'알파 전략을 중심으로 퀀트 투자 파이프라인이 (1) 인간이 설계한 피처·전통 통계모델 → (2) 딥러닝 기반 종단간(end-to-end) 파이프라인 → (3) LLM 기반 자율 에이전트로 진화해온 과정을 정리한 서베이.',
+    arch:'세 단계(전통 피처엔지니어링, 딥러닝 종단간 모델링, LLM 에이전트의 비정형 데이터 처리·알파 생성·자기반복 워크플로우)를 조직 원리로 사용.',
+    results:'AI가 단순 예측을 넘어 자율적 리서치 워크플로우까지 확장되는 "잠재적 패러다임 전환"의 단계에 있다고 결론.',
+    evidence:'이 맵 전체의 뼈대와 가장 가까운 최신 종합 서베이 — 30편 분류 체계의 출발점으로 사용.',
+    citeTier:'신규 (2025)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 개별 인용 미확인, 종합 서베이로서의 구조적 위치',
+    url:'https://arxiv.org/abs/2503.21422'},
+  {id:'s2', cat:0, year:2025.83, title:'The New Quant: A Survey of Large Language Models in Financial Prediction and Trading', short:'LLM 금융예측·트레이딩 서베이',
+    authors:'Weilong Fu', venue:'arXiv preprint, 2025-10', arxivId:'2510.05533',
+    desc:'LLM을 활용한 금융 예측·트레이딩 전반을 정리',
+    summary:'주식 수익률 예측·트레이딩에 관한 50편 이상의 1차 연구를 태스크 중심(감성추출, 이벤트식별, 수치추론, 경제분석, 멀티모달, RAG, 시계열, 자율시스템)으로 분류한 서베이.',
+    arch:'검색우선 프롬프팅, 도구검증 계산 등 신뢰성을 높이는 설계 패턴을 정리하고, 비용·지연시간을 포함한 경제적으로 의미있는 평가 기준을 제안.',
+    results:'표준화된 평가 절차 확립, 감사가능한(auditable) 파이프라인 구축, 다국어·교차시장 연구 확대가 필요하다고 제언.',
+    evidence:'LLM 활용 범위를 태스크 단위로 가장 촘촘하게 분류한 최신 서베이.',
+    citeTier:'신규 (2025)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 개별 인용 미확인',
+    url:'https://arxiv.org/abs/2510.05533'},
+  {id:'s3', cat:0, year:2024.67, title:'Deep Learning in Finance: A Survey of Applications and Techniques', short:'금융 딥러닝 서베이',
+    authors:'Ebikella Mienye, Nobert Jere, George Obaido, Ibomoiye Domor Mienye, Kehinde Aruleba', venue:'Preprints.org, 2024-08', arxivId:null,
+    desc:'금융 도메인 딥러닝 응용·기법 서베이',
+    summary:'CNN·LSTM·DBN·Transformer·GAN·Deep RL 6대 딥러닝 아키텍처의 학습원리·수학적 기초와 금융 응용(알고리즘 트레이딩, 신용평가, 사기탐지, 시장예측, 포트폴리오관리)을 개괄하는 입문형 서베이.',
+    arch:'6개 아키텍처군을 학습 방식별로 정리한 개론형 구성.',
+    results:'데이터 품질, 모델 해석가능성, 연산복잡도가 향후 극복해야 할 공통 과제로 지목됨.',
+    evidence:'비전문가도 딥러닝 도구상자 전체를 한 번에 훑을 수 있는 개괄 자료로 포함.',
+    citeTier:'신규 (2024)',
+    basis:'venue', basisNote:'MDPI AI 저널(2673-2688/5/4/101)에 정식 게재 확인 — 프리프린트 아닌 심사 통과본',
+    url:'https://www.preprints.org/manuscript/202408.1365'},
+  {id:'f1', cat:1, year:2020.5, title:'Empirical Asset Pricing via Machine Learning', short:'ML 자산가격결정 (Gu-Kelly-Xiu)',
+    authors:'Shihao Gu, Bryan Kelly, Dacheng Xiu', venue:'Review of Financial Studies 33(5), 2020 · NBER WP 25398', arxivId:null,
+    desc:'이 분야 사실상의 표준 벤치마크. 트리/신경망 팩터모델이 선형모델을 능가함을 보임',
+    summary:'8가지 ML 기법(선형회귀, 부분최소제곱, 일반화선형모형, 부스티드트리, 랜덤포레스트, 1~5층 신경망)으로 주식 리스크 프리미엄 예측력을 비교. 초록 원문 확인: "in some cases doubling the performance of leading regression-based strategies", 트리·신경망이 최우수, 비선형 상호작용 포착이 핵심.',
+    arch:'트리·신경망 계열이 비선형 상호작용을 포착해 선형모델을 압도한다고 초록에서 명시. 모멘텀·유동성·변동성이 모든 방법에서 공통 핵심 예측변수로 확인(초록 확인).',
+    results:'초록에는 구체 수치가 없음. "월간 OOS R² 0.40% vs 0.16%, 신경망 롱숏 샤프비율 1.35 vs 0.61"은 이 논문 본문 표에서 널리 인용되는 수치로 일반 지식상 신뢰도가 높으나, <strong>이번 세션에서 원문 표를 직접 재확인하지는 못했음</strong> — 정밀 인용이 필요하면 논문 원문 대조 권장.',
+    evidence:'ML 기반 자산가격결정의 사실상 표준 벤치마크 — 이후 거의 모든 팩터×ML 논문이 이 논문의 설계를 준용하거나 비교 대상으로 삼음. (신호 유형: 인용수 확인)',
+    citeTier:'1,707회 (Semantic Scholar, 2026-08 확인)',
+    basis:'citation', basisNote:'Semantic Scholar 인용 1,707회 확인',
+    url:'https://dachxiu.chicagobooth.edu/download/ML.pdf'},
+
+  {id:'t1', cat:2, year:2025.67, title:'FinCast: A Foundation Model for Financial Time-Series Forecasting', short:'FinCast',
+    authors:'Zhuohang Zhu, Haodong Chen, Qiang Qu, Vera Chung', venue:'arXiv preprint, 2025-08', arxivId:'2508.19609',
+    desc:'금융 시계열 전용 파운데이션 모델',
+    summary:'금융 시계열 특유의 비정상성(시간에 따른 분포 변화), 다중 도메인 이질성(주식·원자재·선물 등), 다중 시간해상도(초/시간/일/주) 문제를 다루기 위해 대규모 금융 데이터로 사전학습한 최초의 금융 전용 파운데이션 모델.',
+    arch:'대규모 금융 데이터셋으로 학습한 파운데이션 모델 — 도메인별 파인튜닝 없이도 다양한 패턴을 포착하는 제로샷 추론에 초점 (세부 아키텍처는 초록에 비공개).',
+    results:'파인튜닝 없이도 강건한 제로샷 성능을 보이며, 기존 SOTA 방법 대비 우수한 일반화 능력을 입증했다고 주장.',
+    evidence:'"금융 전용" 파운데이션 모델을 표방한 2025년 대표 사례.',
+    citeTier:'신규 (2025)',
+    basis:'novelty', basisNote:'초록에 "the first foundation model specifically designed for financial time-series forecasting"라고 최초성 명시',
+    url:'https://arxiv.org/abs/2508.19609'},
+  {id:'t2', cat:2, year:2025.42, title:'Foundation Time-Series AI Model for Realized Volatility Forecasting', short:'실현변동성 예측 파운데이션 모델',
+    authors:'Anubha Goel, Puneet Pasricha, Martin Magris, Juho Kanniainen', venue:'arXiv preprint, 2025-05', arxivId:'2505.11163',
+    desc:'실현 변동성 예측에 특화된 시계열 파운데이션 모델',
+    summary:'범용 시계열 파운데이션 모델인 TimesFM을 금융 리스크관리의 핵심 과제인 실현변동성(realized volatility) 예측에 제로샷·파인튜닝 두 가지 방식으로 평가하고 전통 계량경제 벤치마크와 비교.',
+    arch:'사전학습된 TimesFM(제로샷) + 점진적 학습(incremental learning) 기반 커스텀 파인튜닝 절차.',
+    results:'제로샷 모델도 합리적인 베이스라인이 되지만, 점진적 파인튜닝이 변동성 패턴 학습에 필수적임을 확인. 파인튜닝 모델은 Diebold-Mariano·Giacomini-White 통계검정에서 전통 모델을 유의하게 능가.',
+    evidence:'범용 시계열FM을 금융 리스크관리(변동성 예측)에 적용한 구체적 실증 사례.',
+    citeTier:'신규 (2025)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/abs/2505.11163'},
+  {id:'t3', cat:2, year:2025.58, title:'Time Series Foundation Models for Multivariate Financial Time Series Forecasting', short:'다변량 금융시계열 FM',
+    authors:'Ben Asher Marconi (Imperial College London)', venue:'arXiv preprint, 2025-07', arxivId:'2507.07296',
+    desc:'다변량 금융 시계열에 파운데이션 모델 적용 — 이전 버전 요약에 오류가 있어 초록 재확인 후 수정함',
+    summary:'TTM(Tiny Time Mixers)과 Chronos 두 시계열 파운데이션 모델을, 미국채 금리변화·EUR/USD 변동성·주식 스프레드 예측 3개 과제에서 전통 특화모델과 비교평가.',
+    arch:'저빈도·신규상장·신흥시장 자산처럼 데이터가 제한적인 상황에 초점을 맞춘 비교 설계.',
+    results:'TTM은 데이터가 제한적인 상황에서 강한 전이성을 보여 성능 25~50% 개선, 필요 학습기간도 3~10년 단축. 그러나 <strong>3개 과제 중 2개에서는 오히려 전통 특화모델이 TSFM과 동등하거나 더 우수</strong>했음 — "도메인 특화 사전학습과 금융 시계열에 맞춘 구조적 개선이 여전히 필요하다"고 결론. (※ 이전 버전에서 제가 적었던 "샤프비율 1.39" 등 구체 수치는 실제 초록에 없는 내용으로 확인되어 삭제·수정함)',
+    evidence:'시계열FM이 금융에서 무조건 우수하지는 않다는 균형잡힌 반례 — t5(재검토 논문)와 같은 결론을 독립적으로 뒷받침.',
+    citeTier:'신규 (2025, 인용 데이터 없음)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/abs/2507.07296'},
+  {id:'t5', cat:2, year:2025.92, title:'Re(Visiting) Time Series Foundation Models in Finance', short:'금융 시계열FM 재검토',
+    authors:'Eghbal Rahimikia, Hao Ni, Weiguan Wang', venue:'arXiv preprint, 2025-11', arxivId:'2511.18578',
+    desc:'금융 시계열 파운데이션 모델에 대한 최신 비판적 재검토',
+    summary:'글로벌 금융시장의 대규모 일별 초과수익률 데이터를 이용해 시계열 파운데이션 모델의 제로샷 추론·파인튜닝·처음부터(from-scratch) 사전학습을 강력한 벤치마크 모델과 비교한 최초의 포괄적 실증연구.',
+    arch:'범용 목적으로 사전학습된 기성 TSFM vs 금융 데이터로 처음부터 사전학습한 TSFM을 동일 조건에서 비교.',
+    results:'기성 범용 TSFM은 제로샷·파인튜닝 설정 모두에서 부진했으나, 금융 데이터로 처음부터 학습한 모델은 예측력과 경제적 성과 모두에서 상당한 개선을 보임. 데이터 규모 확대·합성데이터 증강·하이퍼파라미터 튜닝이 성능을 추가로 끌어올림.',
+    evidence:'"범용 파운데이션 모델을 금융에 그대로 가져다 써도 되는가?"에 대한 비판적 재검토 — t1~t4의 낙관적 흐름에 균형을 잡아주는 논문.',
+    citeTier:'신규 (2025)',
+    basis:'novelty', basisNote:'초록에 "the first comprehensive empirical study of TSFMs in global financial markets"라고 최초성 명시',
+    url:'https://arxiv.org/abs/2511.18578'},
+
+  {id:'g1', cat:3, year:2024.5, title:'A Systematic Review on Graph Neural Network-based Methods for Stock Market Forecasting', short:'GNN 주가예측 서베이',
+    authors:'Manali Patel, Krupa Jariwala, Chiranjoy Chattopadhyay', venue:'ACM Computing Surveys, 2024', arxivId:null,
+    desc:'GNN 기반 주가예측 방법론 체계적 리뷰 (ACM Computing Surveys)',
+    summary:'전통적 시계열·ML 기법이 놓치는 종목간 상호연결성을 GNN이 지식그래프 형태로 모델링하는 방식을 정리한 체계적 리뷰. 분류·회귀·종목추천 등 태스크 유형, 일반화된 해결 프레임워크, 피처·데이터셋·그래프모델·평가지표를 총망라.',
+    arch:'그래프신경망이 비유클리드 데이터(종목간 관계)를 처리하는 일반화된 프레임워크를 제시.',
+    results:'금융 지식그래프 특유의 동적이고 복잡한 상호작용이 그래프 모델링의 핵심 난제로 지목됨. 향후 연구방향도 함께 제시.',
+    evidence:'GNN 주가예측 분야에서 가장 포괄적인 최신 체계적 리뷰.',
+    citeTier:'신규 (2024)',
+    basis:'venue', basisNote:'ACM Computing Surveys 게재 — 컴퓨터과학 서베이 분야 최고 권위 저널 중 하나',
+    url:'https://dl.acm.org/doi/10.1145/3696411'},
+  {id:'g2', cat:3, year:2025.17, title:'A Distillation-based Future-aware Graph Neural Network for Stock Trend Prediction', short:'증류 기반 미래인지 GNN (DishFT-GNN)',
+    authors:'(초록에 저자정보 없음, 모델명 DishFT-GNN으로 확인)', venue:'arXiv preprint, 2025-02', arxivId:'2502.10776',
+    desc:'지식증류를 활용한 미래인지형 GNN 주가추세 예측',
+    summary:'DishFT-GNN이라는 이름의 교사-학생(teacher-student) 지식증류 구조를 통해 "미래를 인지하는" 시공간 임베딩을 학습하는 GNN 기반 주가추세 예측 모델 (초록 확인).',
+    arch:'교사모델이 과거-미래 데이터의 분포 변화(distribution shift) 상관관계를 학습하고, 이를 중간 지도신호(intermediate supervision)로 삼아 학생모델이 미래인지형 임베딩을 학습.',
+    results:'두 개의 실제 데이터셋에 대한 광범위한 실험에서 SOTA 성능을 달성했다고 보고 (구체적 수치는 초록에 비공개).',
+    evidence:'지식증류를 GNN 주가예측에 접목한 최신 방법론적 시도.',
+    citeTier:'신규 (2025)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/abs/2502.10776'},
+  {id:'g4', cat:3, year:2024.58, title:'GraphCNNpred: A Stock Market Indices Prediction Using a Graph-based Deep Learning System', short:'GraphCNNpred',
+    authors:'(초록 비공개 저자정보)', venue:'arXiv preprint, 2024-07', arxivId:'2407.03760',
+    desc:'그래프 기반 딥러닝으로 주가지수 예측',
+    summary:'그래프신경망 기반 CNN 모델로 다양한 데이터 소스에서 특징을 추출해 S&P500·NASDAQ·DJI·NYSE·Russell 5개 주요 지수의 추세를 예측.',
+    arch:'그래프 구조를 결합한 CNN(Graph-CNN) 아키텍처로 여러 데이터 소스를 동시에 처리.',
+    results:'베이스라인 알고리즘 대비 F-measure 기준 4~15% 성능 개선. 예측 기반 트레이딩 시뮬레이션에서 샤프비율 3 이상 달성.',
+    evidence:'그래프+CNN 결합의 실용적 성능을 구체적 수치로 보여준 사례.',
+    citeTier:'신규 (2024)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/html/2407.03760v2'},
+
+  {id:'r1', cat:4, year:2017.5, title:'A Deep Reinforcement Learning Framework for the Financial Portfolio Management Problem', short:'DRL 포트폴리오 프레임워크(원조)',
+    authors:'Zhengyao Jiang, Dixing Xu, Jinjun Liang', venue:'arXiv preprint, 2017-06 (Computational Finance 誌 게재)', arxivId:'1706.10059',
+    desc:'RL 포트폴리오 관리 분야의 원조격 논문, 지금도 자주 인용됨',
+    summary:'모델-프리(model-free) 강화학습으로 포트폴리오를 관리하는 프레임워크. EIIE(동일독립평가자 앙상블) 토폴로지, 포트폴리오벡터메모리(PVM), 온라인확률적배치학습(OSBL), 명시적 보상함수 네 가지 핵심 구성요소로 이뤄짐.',
+    arch:'CNN·RNN·LSTM 세 가지 신경망으로 프레임워크를 구현해 30분 주기 암호화폐 시장에서 백테스트.',
+    results:'세 신경망 버전 모두 비교 대상 트레이딩 알고리즘을 제치고 모든 실험에서 상위 1~3위를 독점. 0.25%의 높은 수수료율에도 50일 만에 4배 이상의 수익 달성.',
+    evidence:'RL 포트폴리오 관리 분야의 원조 논문 — 이후 대부분의 후속 연구(r3~r5 포함)가 이 EIIE 프레임워크를 기준점으로 인용하거나 개선 대상으로 삼음.',
+    citeTier:'394+ (Semantic Scholar 확인, 2026-08 기준 — RL 포트폴리오 분야 최다 인용 축)',
+    basis:'citation', basisNote:'Semantic Scholar 인용 394회 확인',
+    url:'https://arxiv.org/abs/1706.10059'},
+  {id:'r2', cat:4, year:2025.99, title:'Reinforcement Learning in Financial Decision Making: A Systematic Review of Performance, Challenges, and Implementation Strategies', short:'금융 RL 종합 리뷰(최신)',
+    authors:'Mohammad Rezoanul Hoque, Md Meftahul Ferdaus, M. Kabir Hassan', venue:'arXiv preprint, 2025-12', arxivId:'2512.10913',
+    desc:'금융 의사결정에서의 RL 활용을 성능·과제·구현 관점에서 정리한 최신 리뷰',
+    summary:'2017~2025년 발표된 167편의 논문을 마켓메이킹·포트폴리오최적화·알고리즘트레이딩 3대 영역으로 나눠 분석한 체계적 리뷰. 설명가능성·강건성·배포가능성을 아우르는 통합 프레임워크를 제안.',
+    arch:'167편에 대한 메타분석 + 통합 평가 프레임워크(설명가능성, 강건성, 배포 실현가능성).',
+    results:'RL은 특히 마켓메이킹에서 전통기법 대비 강점을 보이나, "알고리즘의 정교함보다 구현 품질과 도메인 지식이 성패를 좌우"한다고 결론. 규제 대응을 위한 해석가능한 아키텍처, 비정상 환경에서의 강건성, 표준화된 벤치마크가 필요하다고 제언.',
+    evidence:'167편을 분석한 이 분야 최신·최대 규모 체계적 리뷰로, r1·r3~r5를 포괄.',
+    citeTier:'신규 (2025)',
+    basis:'taxonomy', basisNote:'167편을 분석한 메타리뷰라는 범위 자체는 확인되나, 이 논문 자체의 인용·게재처 신호는 미확인',
+    url:'https://arxiv.org/abs/2512.10913'},
+  {id:'r3', cat:4, year:2025.25, title:'MTS: A Deep RL Portfolio Management Framework with Time-Awareness and Short-Selling', short:'MTS 프레임워크',
+    authors:'(초록 비공개 저자정보)', venue:'arXiv preprint, 2025-03', arxivId:'2503.04143',
+    desc:'시간인지·공매도를 지원하는 DRL 포트폴리오 프레임워크',
+    summary:'시간인지 인코더-어텐션 메커니즘, 시장추세에 대응하는 자동화된 공매도 전략, Incremental Conditional Value-at-Risk 기반 리스크관리를 결합한 DRL 포트폴리오 프레임워크.',
+    arch:'인코더-어텐션(시장의 시간적 특성 반영) + 공매도 대응 모듈 + CVaR 기반 리스크관리 모듈로 구성.',
+    results:'2019~2023년 5개 데이터셋에서 경쟁 전략 대비 누적수익률 평균 30.67%, 샤프비율 평균 29.33% 상대적 개선. Sortino·Omega 비율에서도 우위 확인.',
+    evidence:'공매도·리스크관리까지 통합한 비교적 완결적인 실무형 RL 프레임워크.',
+    citeTier:'신규 (2025)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/abs/2503.04143'},
+  {id:'r4', cat:4, year:2024.42, title:'Portfolio Management using Deep Reinforcement Learning', short:'DRL 포트폴리오 관리',
+    authors:'Ashish Anil Pawar, Vishnureddy Prashant Muskawar, Ritesh Tiku', venue:'arXiv preprint, 2024-05', arxivId:'2405.01604',
+    desc:'DRL 기반 포트폴리오 운용 실증 연구',
+    summary:'DQN과 A2C 두 심층강화학습 알고리즘으로 자산 배분 비중을 결정하는 "강화학습 포트폴리오 매니저"를 제안. 롱/숏 포지션을 모두 취할 수 있는 무마찰(수수료 없는) 시장 환경을 가정.',
+    arch:'DQN, A2C 두 알고리즘을 비교하며 자산배분 비중 조정을 행동공간으로 설정.',
+    results:'제안된 매니저가 벤치마크 지수와 전통적 포트폴리오 매니저 대비 위험조정수익률에서 우위를 보인다고 결론.',
+    evidence:'비교적 단순한 셋업으로 DRL의 기본 효과를 보여주는 사례 연구로 포함.',
+    citeTier:'신규 (2024)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/abs/2405.01604'},
+  {id:'r5', cat:4, year:2018.67, title:'Adversarial Deep Reinforcement Learning in Portfolio Management', short:'적대적 DRL 포트폴리오',
+    authors:'Zhipeng Liang, Hao Chen, Junhao Zhu, Kangkang Jiang, Yanran Li', venue:'arXiv preprint, 2018-08', arxivId:'1808.09940',
+    desc:'적대적 학습(adversarial)을 결합한 DRL 포트폴리오 관리',
+    summary:'DDPG, PPO, PG(Policy Gradient) 세 가지 연속제어 강화학습 알고리즘을 포트폴리오관리 문제에 적용·비교하고, 적대적 학습(adversarial training)으로 학습 효율을 개선하는 방법을 제안.',
+    arch:'학습률·목적함수·피처 조합을 체계적으로 바꿔가며 세 알고리즘을 비교, Adversarial Training 기법을 추가 도입.',
+    results:'PG가 DDPG·PPO보다 금융시장에서 더 우수한 것으로 확인. 적대적 학습을 결합한 PG는 일일평균수익률·샤프비율을 유의하게 개선하며 UCRP(균등리밸런싱) 벤치마크를 능가.',
+    evidence:'여러 RL 알고리즘을 동일 조건에서 비교한 초기 실증 비교연구로, RL 트레이딩 레이어의 방법론적 다양성을 보여줌.',
+    citeTier:'신규 (2018, 개별 인용 데이터 미확인)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음(2018년 논문이나 인용수 미확인)',
+    url:'https://arxiv.org/abs/1808.09940'},
+
+  {id:'n1', cat:5, year:2025.58, title:'FinDPO: Financial Sentiment Analysis for Algorithmic Trading through Preference Optimization of LLMs', short:'FinDPO',
+    authors:'Giorgos Iacovides, Wuyang Zhou, Danilo Mandic', venue:'arXiv preprint, 2025-07', arxivId:'2507.18417',
+    desc:'LLM 선호최적화(DPO)를 금융 센티먼트 분석·알고리즘 트레이딩에 적용',
+    summary:'지도학습 파인튜닝(SFT) LLM이 학습데이터를 암기해 미관측 사례에 잘 일반화하지 못하는 한계를 극복하기 위해, DPO(직접선호최적화) 기반 후처리 정렬을 적용한 최초의 금융 특화 LLM 프레임워크.',
+    arch:'"logit-to-score" 변환을 통해 이산적인 감성분류 결과를 연속적이고 순위화 가능한 확률 점수로 바꿔 실전 포트폴리오 전략에 통합.',
+    results:'표준 감성분류 벤치마크에서 기존 SFT 모델 대비 평균 11% 성능 향상. 5bp의 현실적 거래비용 하에서도 연 67% 수익률, 샤프비율 2.0을 달성 — 센티먼트 기반 접근으로는 최초로 이 정도의 견조한 성과를 보고.',
+    evidence:'DPO를 금융 감성분석에 접목한 최초 사례이자, 구체적인 트레이딩 성과까지 함께 제시한 논문.',
+    citeTier:'신규 (2025)',
+    basis:'novelty', basisNote:'초록에 "the first finance-specific LLM framework based on...Direct Preference Optimization"라고 최초성 명시',
+    url:'https://arxiv.org/abs/2507.18417'},
+  {id:'n2', cat:5, year:2024.83, title:'Financial Sentiment Analysis on News and Reports Using Large Language Models', short:'뉴스·리포트 센티먼트(LLM)',
+    authors:'Yanxin Shen, Pulin Kirin Zhang', venue:'arXiv preprint, 2024-10', arxivId:'2410.01987',
+    desc:'LLM을 이용한 뉴스·리포트 금융 센티먼트 분석',
+    summary:'BERT와 그 금융 특화 변형인 FinBERT, 그리고 GPT-4o를 뉴스기사·금융리포트·기업공시에 대한 감성분석 성능으로 비교하고, 제로샷/퓨샷 프롬프트 엔지니어링의 효과를 검증.',
+    arch:'프롬프트 엔지니어링(제로샷·퓨샷) 기반 범용 LLM 활용 vs 도메인 특화 파인튜닝된 FinBERT를 비교.',
+    results:'퓨샷 예시를 활용한 GPT-4o가 잘 파인튜닝된 FinBERT에 필적하는 성능을 달성 — 파인튜닝 없이도 범용 LLM이 특화모델을 대체할 수 있다는 실증 근거 제시.',
+    evidence:'"파인튜닝 없이도 범용 LLM이 특화모델을 대체할 수 있는가"라는 실무적 질문에 답하는 논문.',
+    citeTier:'신규 (2024)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/pdf/2410.01987'},
+  {id:'n3', cat:5, year:2025.5, title:'News Sentiment and Stock Market Dynamics: A Machine Learning Investigation', short:'뉴스 센티먼트-주가 동학',
+    authors:'Milivoje Davidovic, Jacqueline McCleary', venue:'Journal of Risk and Financial Management (MDPI), 2025', arxivId:null,
+    desc:'뉴스 센티먼트와 주가 변동의 관계를 ML로 분석',
+    summary:'약 186만 건의 뉴스 헤드라인(2010-02~2020-06)과 TextBlob·VADER·FinBERT 3종 감성분석 도구, 내재변동성(VIX)을 함께 사용해 뉴스 감성의 주가 예측력을 대규모로 검증.',
+    arch:'6종 앙상블 ML(XGBoost, Gradient Boosting, AdaBoost, Random Forest, Bagging, Stacking) + 워크포워드 교차검증 + 거래비용을 반영한 백테스트.',
+    results:'전통적 감성점수는 독립적으로는 예측력이 약했지만, 선행적(implied) 감성이 주가 수익률 변동의 약 45~50%를 설명. "지속적으로 착취 가능한 우위는 없다"며 약형·준강형 효율적시장가설을 지지하는 결과.',
+    evidence:'감성분석의 실전 수익화 가능성에 대해 보기 드물게 신중하고 정량적인 반박 근거를 제시하는 논문 — n1(FinDPO)의 낙관적 결과에 균형을 잡아줌.',
+    citeTier:'신규 (2025)',
+    basis:'venue', basisNote:'Journal of Risk and Financial Management(MDPI) 정식 게재 — 심사 통과본',
+    url:'https://www.mdpi.com/1911-8074/18/8/412'},
+
+  {id:'a1', cat:6, year:2024.67, title:'Large Language Model Agent in Financial Trading: A Survey', short:'LLM 트레이딩 에이전트 서베이',
+    authors:'Han Ding, Yinheng Li, Junhao Wang, Hang Chen, Doudou Guo, Yunbai Zhang', venue:'arXiv preprint, 2024-08', arxivId:'2408.06361',
+    desc:'단일 LLM 에이전트 기반 트레이딩 서베이',
+    summary:'LLM을 트레이딩 에이전트로 활용해 전문 트레이더를 능가할 수 있는지 탐구하는 연구를 체계적으로 정리한, 이 분야 초기 이정표 서베이 중 하나. 에이전트의 공통 아키텍처, 데이터 입력, 백테스트 성과, 과제를 요약.',
+    arch:'LLM 트레이딩 에이전트에서 반복되는 공통 아키텍처 패턴과 다양한 데이터 입력 유형을 분류.',
+    results:'AI 에이전트가 전문 트레이더 수준에 도달할 수 있는지에 대한 초기 증거와 한계를 함께 제시하며, 향후 연구방향을 제안.',
+    evidence:'LLM 트레이딩 에이전트 분야의 초기 이정표 서베이 — a3·a6·a7·a8 등 후속 응용 연구 대부분이 이 논문의 분류체계를 참조.',
+    citeTier:'신규 (2024, 초기 서베이로 후속 연구에서 자주 인용됨)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용수 미확인(2024-08 arXiv 프리프린트)',
+    url:'https://arxiv.org/abs/2408.06361'},
+  {id:'a2', cat:6, year:2025.5, title:'Large Language Model Agents for Investment Management: Foundations, Benchmarks, and Research Frontiers', short:'투자운용 LLM 에이전트',
+    authors:'Preetha Saha, Jingrao Lyu, Arnav Saxena, Tianjiao Zhao, Dhagash Mehta', venue:'Proc. ACM ICAIF 2025 / SSRN', arxivId:null,
+    desc:'투자운용을 위한 LLM 에이전트의 기초·벤치마크·연구 프런티어',
+    summary:'복잡한 추론·도구사용·자율의사결정이 가능한 LLM 에이전트를 트레이딩을 넘어 투자운용 전반(포트폴리오최적화, 리스크관리, 정보검색, 자동전략생성)에 적용한 연구를 종합.',
+    arch:'멀티에이전트 협업, 리플렉션(자기성찰) 메커니즘, 도구증강 파이프라인을 핵심 기술요소로 분류.',
+    results:'강건성·설명가능성·실전 배포와 관련된 과제를 짚고, 더 정교하고 신뢰할 수 있는 금융 AI 에이전트 개발 방향을 제시.',
+    evidence:'트레이딩을 넘어 리서치·포트폴리오·리스크관리까지 LLM 에이전트 적용범위를 확장한 서베이.',
+    citeTier:'신규 (2025)',
+    basis:'venue', basisNote:'ACM ICAIF(금융 AI 전문 학회) 2025 정식 게재',
+    url:'https://dl.acm.org/doi/10.1145/3768292.3770387'},
+  {id:'a3', cat:6, year:2024.99, title:'TradingAgents: Multi-Agents LLM Financial Trading Framework', short:'TradingAgents',
+    authors:'Yijia Xiao, Edward Sun, Di Luo, Wei Wang', venue:'arXiv preprint, 2024-12(오픈소스 공개)', arxivId:'2412.20138',
+    desc:'애널리스트/리서치/트레이더/리스크 역할을 분업하는 멀티에이전트 트레이딩 프레임워크. 오픈소스 구현 존재',
+    summary:'실제 트레이딩 회사의 협업 구조를 모사한 멀티에이전트 프레임워크. 펀더멘털·감성·기술적 애널리스트, 강세(Bull)/약세(Bear) 리서처, 리스크관리팀, 트레이더 역할을 각각 LLM 에이전트로 분업시켜 협업 트레이딩 환경을 시뮬레이션.',
+    arch:'애널리스트 → Bull/Bear 리서처의 토론 → 리스크관리팀 모니터링 → 트레이더가 토론과 과거데이터를 종합해 최종 의사결정하는 파이프라인.',
+    results:'베이스라인 모델 대비 누적수익률·샤프비율·최대낙폭 모두에서 뚜렷한 개선. 논문 공개 이후 GitHub 오픈소스(TauricResearch/TradingAgents, Apache-2.0)로 배포되어 실무·연구 커뮤니티에서 가장 널리 채택된 멀티에이전트 트레이딩 프레임워크 중 하나로 자리잡음.',
+    evidence:'이 맵의 "기술스택(라이선스)" 탭에 실제 오픈소스 구현체로도 포함된 유일한 논문 — 이론과 실무를 잇는 대표 사례.',
+    citeTier:'신규 (2024, 출시 이후 GitHub·후속연구에서 빠르게 확산)',
+    basis:'adoption', basisNote:'GitHub 오픈소스 저장소(TauricResearch/TradingAgents) 실존 — 이 맵의 기술스택 탭에도 등재된 유일한 논문. 인용수 자체는 미확인',
+    url:'https://arxiv.org/abs/2412.20138'},
+  {id:'a4', cat:6, year:2026.42, title:'Agentic Trading: When LLM Agents Meet Financial Markets', short:'Agentic Trading',
+    authors:'Yihan Xia, Panpan You, Taotao Wang, Fang Liu, Han Qi, Xiaoxiao Wu, Shengli Zhang', venue:'arXiv preprint, 2026-05', arxivId:'2605.19337',
+    desc:'LLM 에이전트와 금융시장의 상호작용을 다루는 최신 연구',
+    summary:'LLM 트레이딩 에이전트 관련 77편의 연구를 감사(audit)하여 단 19편만 엄격한 실증 기준을 충족함을 확인한 메타연구. 화려한 성과 보고 이면의 재현성 위기를 정량적으로 드러냄.',
+    arch:'"Architecture-Capability-Adaptation" 분석틀과 재현성 감사 체크리스트를 개발해 77편을 체계적으로 평가.',
+    results:'엄격한 기준을 충족한 19편 중 프로토콜을 추출 가능하게 문서화한 논문은 단 2편, 완전 재현가능(R3) 등급을 받은 논문은 전무. 거래비용 모델링, 생존편향 처리를 제대로 한 연구도 소수에 불과.',
+    evidence:'화려한 성과 보고 이면의 재현성 문제를 정면으로 다룬 2026년 최신 자기비판적 연구 — 백테스트/평가방법론 레이어(b1~b3, a5)와 강하게 연결.',
+    citeTier:'신규 (2026)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증(2026년 발표)',
+    url:'https://arxiv.org/abs/2605.19337'},
+  {id:'a5', cat:6, year:2026.25, title:'Toward Reliable Evaluation of LLM-Based Financial Multi-Agent Systems: Taxonomy, Coordination Primacy, and Cost Awareness', short:'멀티에이전트 평가방법론',
+    authors:'Phat Nguyen, Thang Pham', venue:'arXiv preprint, 2026-03', arxivId:'2603.27539',
+    desc:'LLM 기반 금융 멀티에이전트 시스템의 신뢰성 있는 평가 방법론',
+    summary:'12개 멀티에이전트 시스템과 2개 단일에이전트 베이스라인을 아키텍처 패턴·조정 메커니즘·메모리 구조·도구 통합이라는 4차원으로 분류하고, "조정 우선성 가설(Coordination Primacy Hypothesis)"을 제안.',
+    arch:'4차원 분류 프레임워크 + Coordination Breakeven Spread(CBS) 지표 — 거래비용을 제한 뒤에도 에이전트 간 조정이 실제 가치를 더하는지 측정.',
+    results:'에이전트 간 조정 프로토콜 설계가 모델 규모보다 트레이딩 품질에 더 큰 영향을 미친다고 주장. 선행편향·생존편향·백테스트과적합·거래비용무시·국면전환둔감이라는 5대 평가오류를 식별해 보고된 수익률을 뒤집을 수 있음을 경고.',
+    evidence:'TradingAgents(a3)류 멀티에이전트 시스템을 어떻게 공정하게 평가할지에 대한 방법론적 답을 제시.',
+    citeTier:'신규 (2026)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증(2026년 발표)',
+    url:'https://arxiv.org/abs/2603.27539'},
+  {id:'a6', cat:6, year:2025.08, title:'LLM-Powered Multi-Agent System for Automated Crypto Portfolio Management', short:'크립토 멀티에이전트 포트폴리오',
+    authors:'Yichen Luo, Yebo Feng, Jiahua Xu, Paolo Tasca, Yang Liu', venue:'arXiv preprint, 2025-01', arxivId:'2501.00826',
+    desc:'암호화폐 포트폴리오 자동관리를 위한 LLM 멀티에이전트 시스템',
+    summary:'가격데이터, 온체인 지표, 뉴스 텍스트, 기술적 지표를 결합해 변동성이 큰 암호화폐 시장에서 포트폴리오를 관리하는 3-에이전트(Crypto/News/Trading) 시스템. 계층형·협업형·토론형 3가지 에이전트 조정구조를 비교.',
+    arch:'Crypto 에이전트(시장동학 분석), News 에이전트(주간 뉴스 감성 평가), Trading 에이전트(시그널 융합·포트폴리오 실행)로 구성. 최적 구조는 "Hierarchical(Skill)".',
+    results:'2025년 52주·상위 15개 L1 코인 대상 누적수익률 133.52%, 샤프비율 1.502로 단일에이전트·딥러닝 베이스라인을 압도. Crypto 에이전트를 제거하는 어블레이션 실험에서 수익률이 42.57%p 하락, GPT-4o/GPT-5/Claude Sonnet 4.5 등 여러 LLM에서 일관된 우수 성능 확인.',
+    evidence:'암호화폐라는 고변동성 자산군에서 멀티에이전트 조정구조의 정량적 기여도를 어블레이션으로 증명한 사례.',
+    citeTier:'신규 (2025)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/abs/2501.00826'},
+  {id:'a7', cat:6, year:2025.83, title:'Integrating Large Language Models and Reinforcement Learning for Sentiment-Driven Quantitative Trading', short:'LLM+RL 하이브리드',
+    authors:'(초록 비공개 저자정보)', venue:'arXiv preprint, 2025-10', arxivId:'2510.10526',
+    desc:'LLM(시그널 추출)과 RL(의사결정)을 결합한 하이브리드 접근',
+    summary:'감성분석 LLM인 FinGPT와 연속제어 강화학습 알고리즘 TD3(Twin Delayed DDPG)를 결합한 감성기반 퀀트 트레이딩 시스템. 규칙기반 방식과 RL 기반 방식으로 이질적 시그널을 통합하는 두 접근을 비교.',
+    arch:'FinGPT가 감성 시그널을 추출 → 규칙기반 또는 TD3(RL) 방식으로 기술적 지표와 통합해 매매 결정.',
+    results:'FinGPT의 감성 시그널이 전통적 기술지표와 결합될 때 부가가치를 가지며, RL 알고리즘이 동적 트레이딩 환경에서 이질적 시그널을 통합하는 데 효과적임을 확인.',
+    evidence:'LLM(인지·시그널 추출)과 RL(의사결정)을 명시적으로 결합한 하이브리드 아키텍처의 대표 사례 — s2 서베이가 언급하는 흐름의 구체적 구현.',
+    citeTier:'신규 (2025)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증',
+    url:'https://arxiv.org/abs/2510.10526'},
+  {id:'a8', cat:6, year:2025.58, title:'MASCA: LLM-based Multi-Agent System for Credit Assessment', short:'MASCA (신용평가)',
+    authors:'Gautam Jajoo, Atharva Pandey, Pranjal Chitale, Saksham Agarwal', venue:'arXiv preprint, 2025-07', arxivId:'2507.22758',
+    desc:'신용평가 도메인에 적용한 LLM 멀티에이전트 시스템',
+    summary:'초록 확인: "트레이딩·금융모델링에 집중되어온 금융 LLM 에이전트 연구를 상대적으로 저평가된 신용평가 영역으로 확장, 실제 의사결정 과정을 모사하는 LLM 기반 멀티에이전트 시스템 MASCA를 제안." 3단 계층구조·이종 에이전트 조합 등 세부 아키텍처는 이번 초록 재확인에서 문장이 잘려 완전히 검증하지 못함.',
+    arch:'초록 일부만 확인됨 — 세부 아키텍처(에이전트 역할 분담 등)는 원문 본문 확인 필요.',
+    results:'<strong>이전 버전에 적었던 "정확도 60%(+15.5%p), 재현율 83.33%, F1 73.33%" 등 구체 수치는 이번 재확인에서 초록에 없는 것으로 드러나 삭제함</strong> — 검증되지 않은 상태였습니다. 원문 본문을 직접 확인하기 전까지는 결과 수치를 표기하지 않습니다.',
+    evidence:'멀티에이전트 LLM 패턴이 트레이딩을 넘어 신용평가로도 전이 가능함을 보여주는 응용 확장 사례 (초록 기준 확인, 세부 성과는 미검증).',
+    citeTier:'신규 (2025, 인용 데이터 없음)',
+    basis:'taxonomy', basisNote:'분류체계상 포함 — 인용·게재처 신호 없음, 중요도 미검증. 세부 결과 수치도 미검증 상태(위 결과란 참고)',
+    url:'https://arxiv.org/html/2507.22758v2'},
+
+  {id:'b1', cat:7, year:2014.4, title:'The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality', short:'Deflated Sharpe Ratio',
+    authors:'David H. Bailey, Marcos López de Prado', venue:'The Journal of Portfolio Management, 2014 / SSRN', arxivId:null,
+    desc:'백테스트 다중검정 편향을 보정하는 표준 방법론',
+    summary:'대규모 데이터·고성능 컴퓨팅 시대에 수백만 개의 전략을 백테스트하며 발생하는 "백테스트 과적합"과, 긍정적 결과만 보고되는 "선택편향" 문제를 동시에 보정하는 Deflated Sharpe Ratio(DSR)를 제안.',
+    arch:'확률적 샤프비율(PSR)의 기각기준을 시행 횟수(다중성)에 맞춰 조정 — 독립시행의 기댓값 최대 샤프비율, 시행결과의 분산, 표본 길이, 수익률의 왜도·첨도를 모두 반영하는 공식.',
+    results:'시행 횟수를 공개하지 않는 백테스트는 보고된 성과와 무관하게 과학적으로 무효라고 주장. 투자자는 독립시행 횟수와 백테스트 결과의 분산을 공시받아야 한다고 제언.',
+    evidence:'퀀트 업계에서 "성과 부풀리기"를 정량적으로 걸러내는 사실상의 표준 지표 — 이 맵의 다른 모든 예측·RL·에이전트 논문이 보고하는 샤프비율·수익률 주장을 검증하는 잣대로 기능.',
+    citeTier:'58회 (scispace 확인, 2026-08 — 색인마다 집계가 달라 참고용)',
+    basis:'citation', basisNote:'scispace 확인 58회 (Google Scholar 등 다른 색인은 이보다 높게 집계할 수 있음)',
+    url:'https://www.davidhbailey.com/dhbpapers/deflated-sharpe.pdf'},
+  {id:'b2', cat:7, year:2014.6, title:'The Probability of Backtest Overfitting', short:'Probability of Backtest Overfitting',
+    authors:'David H. Bailey, Jonathan M. Borwein, Marcos López de Prado, Qiji Jim Zhu', venue:'Journal of Computational Finance (~2016) / SSRN', arxivId:null,
+    desc:'백테스트 과적합 확률을 정량화하는 프레임워크',
+    summary:'홀드아웃(hold-out) 같은 표준 통계적 과적합 방지 기법이 투자 백테스트 맥락에서는 신뢰할 수 없다는 점을 지적하고, 백테스트 과적합 확률(PBO)을 추정하는 일반적 프레임워크를 제안.',
+    arch:'조합대칭교차검증(Combinatorially Symmetric Cross-Validation, CSCV) — 성과 데이터를 대칭적인 훈련/테스트 조합들로 분할해, 인샘플에서 최적화된 전략이 아웃오브샘플에서 저조할 확률을 모델-프리·비모수적으로 추정.',
+    results:'CSCV 프레임워크가 과적합된 전략을 성공적으로 식별하고 성과 저하 정도를 정량화함을 실증 — 연구자가 단일 아웃오브샘플 평가에 의존하는 대신 방어 가능한 확률 추정치를 보고할 수 있게 함.',
+    evidence:'b1(Deflated Sharpe Ratio)과 함께 "믿을 수 있는 백테스트란 무엇인가"에 대한 방법론적 토대를 제공.',
+    citeTier:'97회 (scispace 확인, 2026-08 — 색인마다 집계가 달라 참고용)',
+    basis:'citation', basisNote:'scispace 확인 97회',
+    url:'https://www.researchgate.net/publication/318600389_The_probability_of_backtest_overfitting'},
+  {id:'b3', cat:7, year:2024.5, title:'Backtest Overfitting in the Machine Learning Era: A Comparison of Out-of-Sample Testing Methods in a Synthetic Controlled Environment', short:'ML시대 백테스트 과적합',
+    authors:'Hamid R. Arian, Daniel Norouzi M., Luis A. Seco', venue:'Knowledge-Based Systems 305, 2024 / SSRN', arxivId:null,
+    desc:'ML 시대에 맞춰 out-of-sample 검증 방법을 비교',
+    summary:'Heston 확률변동성모형, Merton 점프확산모형, 국면전환모형 등을 결합해 만든 합성 통제환경(synthetic controlled environment)에서 K-Fold, Purged K-Fold, Walk-Forward, CPCV(Combinatorial Purged CV) 등 교차검증 기법들의 신뢰도를 비교.',
+    arch:'금융데이터 특유의 비정상성·자기상관·국면전환을 반영하도록 설계한 합성 벤치마크 환경에서 각 검증기법을 동일 조건으로 평가.',
+    results:'CPCV가 백테스트 과적합확률(PBO)과 Deflated Sharpe Ratio 두 기준 모두에서 가장 우수한 성능을 보임. Walk-Forward 방식은 시간적 변동성이 커 허위발견 방지에 상대적으로 취약.',
+    evidence:'b1·b2의 2014년 고전적 방법론을 머신러닝 시대에 맞게 검증·갱신한 후속 연구 — 이 맵에서 가장 최신의 "검증방법론 비교" 실증연구.',
+    citeTier:'신규 (2024)',
+    basis:'venue', basisNote:'Knowledge-Based Systems(Elsevier, SCIE 등재) 정식 게재',
+    url:'https://www.sciencedirect.com/science/article/abs/pii/S0950705124011110'},
+
+  {id:'liu', cat:0, year:2024.92, title:'A Survey of Financial AI: Architectures, Advances and Open Challenges', short:'Financial AI 서베이 (Liu)',
+    authors:'Junhua Liu (Forth AI)', venue:'arXiv preprint, 2024-11', arxivId:'2411.12747',
+    desc:'이 맵의 상위 분류축(예측/의사결정/지식증강)을 제공한 서베이',
+    summary:'초록 확인: "financial AI를 세 가지 주요 차원 — 복잡한 시장 동학을 포착하는 <strong>예측 모델</strong>, 트레이딩·투자 전략을 최적화하는 <strong>의사결정 프레임워크</strong>, 비정형 금융정보를 활용하는 <strong>지식증강 시스템</strong> — 으로 체계적으로 분석한다."',
+    arch:'본문 구조 확인: 예측 과제(연속 가격예측 / 이진 추세분류 / 랭킹 기반 종목선택, §3–5) → 의사결정 과제(포트폴리오 최적화 / 퀀트 트레이딩, §6–7) → 지식 시스템(정보검색 / 리포트 생성 / 에이전트 시뮬레이션, §8) + 데이터셋(§9)·시계열모델(§10)·미해결 과제(§11).',
+    results:'초록에서 짚는 핵심 혁신은 <strong>금융 시계열 파운데이션 모델</strong>, <strong>시장 관계 모델링을 위한 그래프 기반 아키텍처</strong>, <strong>포트폴리오 최적화를 위한 계층적 프레임워크</strong>. 아울러 "모델 정교함과 실무 제약 사이의 결정적 트레이드오프, 특히 고빈도매매(HFT) 응용에서"의 문제와, 이론적 진전과 산업 구현 사이의 간극을 미해결 과제로 지적.',
+    evidence:'<strong>이 맵의 상위 분류축을 이 논문에서 가져왔음.</strong> 다만 주의: 이 논문의 3차원은 "예측/의사결정/지식증강"이지 "XAI/시계열FM+GNN/DRL"이 아님 — 후자는 이 논문의 분류가 아니라 개별 기법 목록에 가까움.',
+    citeTier:'미확인 (2024-11 arXiv 프리프린트, 인용 데이터 확보 실패)',
+    basis:'adoption', basisNote:'저자가 운영하는 동반 GitHub 큐레이션 저장소(junhua/awesome-finance-ai-papers) 실존 — 다만 인용수·게재처 신호는 확인하지 못함',
+    url:'https://arxiv.org/abs/2411.12747'},
+
+  {id:'x1', cat:8, year:2025.58, title:'Significance of Predictors: Revisiting Stock Return Predictions Using Explainable AI', short:'XAI 수익률 예측변수 (SHAP)',
+    authors:'Bhaskar Goswami, Ajim Uddin', venue:'Annals of Operations Research 357:223–257, 2026 (온라인 2025-07)', arxivId:null,
+    desc:'SHAP으로 166개 자산가격결정 특성의 예측력 순위를 매긴 XAI 연구',
+    summary:'초록 확인: "기존에 식별된 166개 자산가격결정 특성(characteristics)과 그 주식수익률 예측력을 재검토. 설명가능 인공지능을 사용해 다양한 자산가격결정 모델 설정에서 이 예측변수들의 중요도 순위를 매긴다."',
+    arch:'SHAP(Shapley Additive exPlanations)을 주 방법으로 쓰고, LOOM(Leave-One-Out Method), 롱숏 포트폴리오 분석을 보완적으로 병용.',
+    results:'앙상블·딥러닝 기반 모델이 서로 다른 수익률 척도에 걸쳐 일반화된 예측을 제공하는 데 강점. SHAP 분석 결과 <strong>모멘텀과 거래 기반 특성이 더 높은 예측력</strong>을 가짐 — 이는 Gu-Kelly-Xiu(f1)가 초록에서 지목한 "모멘텀·유동성·변동성" 결론과 독립적으로 수렴. 롱숏 포트폴리오 분석에서 핵심 예측변수들의 경제적 유의성이 표본외 R² 격차로 확인됨.',
+    evidence:'XAI 레이어를 대표. f1(Gu-Kelly-Xiu)이 연 "ML 팩터모델" 흐름에 "그래서 무엇이 왜 작동하는가"를 되묻는 후속 축 — 블랙박스 해소가 규제·설득 측면에서 필수라는 문제의식.',
+    citeTier:'미확인 (2025년 온라인 게재, 인용 데이터 없음)',
+    basis:'venue', basisNote:'Annals of Operations Research(Springer, 운영과학 분야 확립된 심사 저널) 정식 게재 — vol.357 pp.223–257',
+    url:'https://link.springer.com/article/10.1007/s10479-025-06717-2'},
+
+  {id:'e1', cat:9, year:2023.67, title:'C++ Design Patterns for Low-latency Applications Including High-frequency Trading', short:'HFT C++ 저지연 패턴',
+    authors:'Paul Bilokon, Burak Gunduz', venue:'arXiv preprint, 2023-09', arxivId:'2309.04259',
+    desc:'HFT 저지연 C++ 최적화 기법을 통계적으로 벤치마크한 연구',
+    summary:'초록 확인: "지연시간이 결정적인 코드 최적화의 지식 공백을 메우는 것을 목표로, 특히 고빈도매매(HFT) 시스템에 초점." 세 가지 기여 — 저지연 프로그래밍 저장소 구축, 시장중립 통계적 차익거래 페어트레이딩 전략 최적화, C++ Disruptor 패턴 구현.',
+    arch:'속도·캐시 활용도·통계적 유의성을 평가지표로 삼아 기법들을 엄밀히 벤치마크. Disruptor 패턴을 전통적 큐 방식과 비교.',
+    results:'<strong>Cache Warming과 Constexpr가 지연시간 감소에서 가장 큰 이득</strong>을 보였고, Disruptor 패턴은 전통적 큐잉 대비 유의한 성능 향상을 보임. 전략 최적화는 속도와 수익성 모두에서 실질적 개선으로 이어짐.',
+    evidence:'엔지니어링 레이어를 대표하는 <strong>동료심사 가능한 학술 근거</strong>. 참고: C++20/23 Ranges·Views나 Rust 트레이트를 다루는 논문이 아니라 <strong>Cache Warming·Constexpr·Disruptor 패턴</strong>을 벤치마크한 논문임 — 흔히 인용되는 "모던 C++/Rust 전환" 서사는 대부분 블로그·업계글 수준이고 이 논문이 뒷받침하는 범위가 아님.',
+    citeTier:'미확인 (인용 데이터 확보 실패)',
+    basis:'taxonomy', basisNote:'제1저자 Paul Bilokon은 Imperial College 및 퀀트 업계에서 알려진 인물이나, 이 논문 자체의 인용수·게재처는 확인하지 못함 — 중요도 미검증',
+    url:'https://arxiv.org/abs/2309.04259'},
+
+  {id:'e2', cat:9, year:2026.4, title:'From Accuracy to Auditability: A Survey of Determinism in Financial AI Systems', short:'재현성·결정성 서베이',
+    authors:'Ruizhe Zhou, Xiaoyang Liu, Gaoyuan Du, Yi Zheng, Shouxi Ren, Deepayan Chakrabarti, Dengdu Jiang (Amazon)', venue:'arXiv preprint, 2026', arxivId:'2605.23955',
+    desc:'금융 AI의 하드웨어·아키텍처 수준 비결정성과 감사가능성을 다룬 서베이',
+    summary:'초록 확인: "규제 금융환경(신용리스크·사기탐지·자금세탁방지)에 ML을 배포하면 알고리즘 재현성의 결정적 취약점이 드러난다. 초기 금융 ML이 백테스트 과적합 같은 <strong>통계적</strong> 문제를 다뤘다면, 심층신경망과 생성형 AI는 하드웨어·아키텍처에 뿌리를 둔 <strong>기계적(mechanical) 비결정성</strong>을 새로 들여왔다."',
+    arch:'현재 금융 AI를 지배하는 세 양식별로 재현성 실패를 시스템 관점에서 정리: 테이블형 모델(사후 설명값의 분산), 그래프 신경망(확률적 샘플링·시간적 비동기성), LLM 기반 에이전트 워크플로우(배치 의존적 발산·궤적 표류).',
+    results:'해법으로 뉴로-심볼릭 게이트웨이, 배치 불변(batch-invariant) 커널, 암호학적 감사 추적을 제시. EU AI Act·SR 11-7 같은 규제 준수와 기술적 재현성을 연결하며, 표준 정확도 지표가 배포 준비도를 포착하지 못하는 이유를 논증.',
+    evidence:'백테스트/평가 레이어(b1~b3)의 통계적 검증 축을, <strong>하드웨어·인프라 수준의 재현성</strong>으로 확장. XAI 레이어와도 직결(SHAP/LIME 설명값 자체가 불안정하다는 지적).',
+    citeTier:'미확인 (2026년 프리프린트, 인용 데이터 없음)',
+    basis:'taxonomy', basisNote:'Amazon 소속 저자진이나 인용수·게재처 신호 미확인 — 중요도 미검증',
+    url:'https://arxiv.org/abs/2605.23955'},
+];
+
+const paperById = Object.fromEntries(papers.map(p=>[p.id,p]));
+
+// curated thematic relationships (not a formal citation graph)
+const edges = [
+  ['s1','r1','다룸'], ['s1','a1','다룸'], ['s1','g1','다룸'], ['s1','t5','다룸'], ['s1','f1','다룸'],
+  ['s2','a1','다룸'], ['s2','a3','다룸'], ['s2','n1','다룸'], ['s2','a7','다룸'],
+  ['a1','a3','포함'], ['a1','a6','포함'], ['a1','a7','포함'], ['a1','a8','포함'], ['a1','a2','중첩'],
+  ['a3','a7','확장(RL 결합)'], ['a3','a6','유사 프레임워크'],
+  ['a7','r2','RL 리뷰 참조'], ['a7','n1','센티먼트 결합'],
+  ['g2','g1','확장'], ['g4','g1','확장'],
+  ['t5','t1','재검토'], ['t5','t2','재검토'], ['t5','t3','재검토'],
+  ['f1','s1','기초 이론 제공'], ['f1','t5','ML 베이스라인 참조'], ['f1','g1','피처 엔지니어링 참조'],
+  ['r2','r1','다룸'], ['r2','r3','다룸'], ['r2','r4','다룸'], ['r2','r5','다룸'],
+  ['b1','r1','평가방법 적용'], ['b1','r3','평가방법 적용'], ['b1','r4','평가방법 적용'], ['b1','a3','평가방법 적용'], ['b1','g2','평가방법 적용'],
+  ['b2','b1','확장'],
+  ['b3','b1','ML시대로 갱신'], ['b3','b2','ML시대로 갱신'],
+  ['a5','b1','평가방법론 계보'], ['a5','b3','평가방법론 계보'], ['a5','a3','평가 대상'], ['a5','a4','평가 대상'],
+  ['n1','a7','시그널 제공'],
+  ['a2','a1','중첩'], ['a2','s2','중첩'],
+  // Liu 서베이 — 이 맵의 상위 분류축 제공, 3차원 각각을 대표하는 논문과 연결
+  ['liu','t1','예측 차원'], ['liu','g1','예측 차원(그래프 아키텍처)'], ['liu','f1','예측 차원'],
+  ['liu','r1','의사결정 차원'], ['liu','a1','지식증강 차원'], ['liu','e1','HFT 실무 제약 지적'],
+  ['liu','s1','서베이 중첩'],
+  // XAI — 팩터모델 계보를 되묻는 축
+  ['x1','f1','예측변수 재검토'], ['x1','g1','피처 중요도 관점'],
+  // 엔지니어링·재현성 — 평가/검증 축의 하드웨어 확장
+  ['e2','b1','통계적 검증 → 기계적 재현성'], ['e2','b3','재현성 계보'],
+  ['e2','x1','설명값 불안정성 지적'], ['e2','a5','평가 신뢰성 계보'], ['e2','a4','재현성 위기 공유'],
+];
+
+const degree = {};
+papers.forEach(p=>degree[p.id]=0);
+edges.forEach(([a,b])=>{degree[a]=(degree[a]||0)+1; degree[b]=(degree[b]||0)+1;});
+
+const stack = [
+  {name:'Qlib', org:'Microsoft', license:'MIT', cat:1, url:'https://github.com/microsoft/qlib', desc:'AI 지향 퀀트 리서치 플랫폼 — 지도학습·시장동학 모델링·RL을 아우르는 전체 워크플로우 지원'},
+  {name:'FinRL', org:'AI4Finance Foundation', license:'MIT', cat:4, url:'https://github.com/AI4Finance-Foundation/FinRL', desc:'금융 강화학습 라이브러리 — 트레이딩 환경(Gym)과 DRL 알고리즘 제공'},
+  {name:'FinGPT', org:'AI4Finance Foundation', license:'MIT', cat:5, url:'https://github.com/AI4Finance-Foundation/FinGPT', desc:'오픈소스 금융 특화 LLM — 센티먼트 분석·금융 NLP 태스크에 활용'},
+  {name:'TradingAgents', org:'TauricResearch', license:'Apache-2.0', cat:6, url:'https://github.com/TauricResearch/TradingAgents', desc:'LangGraph 기반 멀티 LLM 에이전트 트레이딩 프레임워크 (OpenAI/Claude/Gemini 등 다중 LLM 지원) — a3 논문의 오픈소스 구현체'},
+  {name:'Chronos', org:'Amazon Science', license:'Apache-2.0', cat:2, url:'https://github.com/amazon-science/chronos-forecasting', desc:'사전학습된 범용 시계열 예측 파운데이션 모델 — 금융 시계열 파인튜닝의 베이스로 자주 사용 (t3에서 벤치마크로 등장)'},
+  {name:'vectorbt', org:'polakowo', license:'Apache-2.0 + Commons Clause', cat:7, url:'https://github.com/polakowo/vectorbt', desc:'벡터화 연산 기반 고속 백테스팅 엔진 (소스 공개형이나 재판매 금지 조항 있음 — 순수 OSI 오픈소스 아님)'},
+  {name:'backtrader', org:'mementum', license:'GPL-3.0', cat:7, url:'https://github.com/mementum/backtrader', desc:'이벤트 기반(event-driven) 파이썬 백테스팅 프레임워크'},
+];
+
+/* ---------------- helpers ---------------- */
+const svgns = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent){
+  const e = document.createElementNS(svgns, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+const tooltip = document.getElementById('tooltip');
+function showTip(evt, html){
+  tooltip.innerHTML = html;
+  tooltip.style.opacity = 1;
+  moveTip(evt);
+}
+function moveTip(evt){
+  const pad = 14;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  if(x + 290 > vw) x = evt.clientX - 290 - pad;
+  if(y + 100 > vh) y = evt.clientY - 100 - pad;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+function hideTip(){ tooltip.style.opacity = 0; }
+
+function fmtYear(y){
+  const yr = Math.floor(y);
+  const mo = Math.round((y-yr)*12);
+  if(mo<=0) return String(yr);
+  return yr + '.' + String(mo).padStart(2,'0');
+}
+
+function bindLeaf(g, p){
+  const cat = categories[p.cat];
+  g.setAttribute('tabindex','0');
+  g.setAttribute('role','button');
+  g.setAttribute('aria-label', p.short + ' 상세보기');
+  g.addEventListener('mouseenter', (e)=>showTip(e, `<b>${p.short}</b><div class="meta">${cat.name} · ${fmtYear(p.year)}</div>${p.desc}<div class="hint2">클릭하면 상세 카드가 열립니다</div>`));
+  g.addEventListener('mousemove', moveTip);
+  g.addEventListener('mouseleave', hideTip);
+  g.addEventListener('click', ()=>openModal(p.id));
+  g.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openModal(p.id); } });
+}
+
+function buildLegend(containerId){
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  groups.forEach(grp=>{
+    const item = document.createElement('div');
+    item.className='item';
+    item.title = grp.note;
+    const sw = document.createElement('span');
+    sw.className='swatch';
+    sw.style.background = `var(--${grp.key})`;
+    item.appendChild(sw);
+    const label = document.createElement('span');
+    const subs = categories.filter(x=>x.group===grp.id).map(x=>x.short).join(' · ');
+    label.innerHTML = `<strong>${grp.name}</strong> <span style="opacity:.7">— ${subs}</span>`;
+    item.appendChild(label);
+    c.appendChild(item);
+  });
+}
+buildLegend('legend-mindmap');
+buildLegend('legend-timeline');
+buildLegend('legend-network');
+
+/* ---------------- Tab switching ---------------- */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected','false'));
+    btn.setAttribute('aria-selected','true');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------------- Theme toggle ---------------- */
+const themeBtn = document.getElementById('themeToggle');
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'dark' ? '라이트 모드' : '다크 모드';
+}
+setTheme('light');
+themeBtn.addEventListener('click', ()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  setTheme(cur === 'dark' ? 'light' : 'dark');
+});
+
+/* ================= MODAL ================= */
+const modalOverlay = document.getElementById('modalOverlay');
+let lastFocused = null;
+function openModal(id){
+  const p = paperById[id];
+  const cat = categories[p.cat];
+  lastFocused = document.activeElement;
+
+  const grp = groups[cat.group];
+  const tag = document.getElementById('modalThemeTag');
+  tag.innerHTML = `<span class="dot" style="background:var(--${grp.key})"></span>${grp.name} <span style="opacity:.6;font-weight:400">›</span> ${cat.name}`;
+
+  document.getElementById('modalTitle').textContent = p.title;
+  const metaParts = [p.authors, p.venue].filter(Boolean);
+  if(p.arxivId) metaParts.push('arXiv:'+p.arxivId);
+  document.getElementById('modalMeta').textContent = metaParts.join(' · ');
+
+  const links = document.getElementById('modalLinks');
+  links.innerHTML = '';
+  const a1 = document.createElement('a');
+  a1.href = p.url; a1.target='_blank'; a1.rel='noopener';
+  a1.textContent = '원문 보기 →';
+  links.appendChild(a1);
+  if(p.id === 'a3'){
+    const a2 = document.createElement('a');
+    a2.href = 'https://github.com/TauricResearch/TradingAgents'; a2.target='_blank'; a2.rel='noopener';
+    a2.textContent = 'GitHub 저장소 →';
+    links.appendChild(a2);
+  }
+
+  const BASIS_LABELS = {
+    citation: '인용수 확인됨',
+    venue: '심사 통과 저널·학회 게재',
+    novelty: '최초시도 자체주장(초록 확인)',
+    adoption: '오픈소스 실채택',
+    taxonomy: '분류체계상 포함 (중요도 미검증)',
+  };
+  const metric = document.getElementById('modalMetric');
+  metric.innerHTML = `
+    <dt>인용 지표</dt><dd>${p.citeTier}</dd>
+    <dt>판단 근거 유형</dt><dd><span class="basis-tag basis-${p.basis}">${BASIS_LABELS[p.basis]||p.basis}</span> — ${p.basisNote||''}</dd>
+    <dt>선정 근거</dt><dd>${p.evidence}</dd>
+    <dt>연결도</dt><dd>맵 내 다른 논문과 ${degree[p.id]||0}개 연결 (연관성 탭 참고)</dd>
+  `;
+
+  document.getElementById('modalSummary').innerHTML = p.summary || p.desc;
+  document.getElementById('modalArch').innerHTML = p.arch || '—';
+  document.getElementById('modalResults').innerHTML = p.results || '—';
+
+  modalOverlay.classList.add('open');
+  document.getElementById('modalClose').focus();
+  document.addEventListener('keydown', onModalKeydown);
+}
+function closeModal(){
+  modalOverlay.classList.remove('open');
+  document.removeEventListener('keydown', onModalKeydown);
+  if(lastFocused) lastFocused.focus();
+}
+function onModalKeydown(e){
+  if(e.key === 'Escape') closeModal();
+}
+document.getElementById('modalClose').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
+
+/* ================= MINDMAP (3-level: 대분류 → 테마 → 논문) ================= */
+(function(){
+  const svg = document.getElementById('svg-mindmap');
+  const cx = 660, cy = 505;
+  const GROUP_R = 115, CAT_R = 240;
+
+  // center
+  el('circle', {cx, cy, r:38, fill:'var(--text-primary)'}, svg);
+  const t1 = el('text', {x:cx, y:cy-3, 'text-anchor':'middle', style:'fill:var(--surface-1)', 'font-size':11, 'font-weight':700}, svg);
+  t1.textContent = '퀀트 × AI';
+  const t2 = el('text', {x:cx, y:cy+11, 'text-anchor':'middle', style:'fill:var(--surface-1)', 'font-size':11, 'font-weight':700}, svg);
+  t2.textContent = '기술 스택';
+
+  // angular budget per group, proportional to paper count
+  const groupCounts = groups.map(g =>
+    papers.filter(p => categories[p.cat].group === g.id).length);
+  const total = groupCounts.reduce((a,b)=>a+b,0);
+  const GAP = 0.14; // radians of padding between groups
+  let cursor = -Math.PI/2 - 0.5;
+
+  groups.forEach((grp, gi)=>{
+    const span = (groupCounts[gi]/total) * (Math.PI*2 - GAP*groups.length);
+    const gStart = cursor;
+    const gEnd = cursor + span;
+    const gMid = (gStart + gEnd)/2;
+    cursor = gEnd + GAP;
+
+    // group node
+    const gx = cx + Math.cos(gMid)*GROUP_R;
+    const gy = cy + Math.sin(gMid)*GROUP_R;
+    el('line', {x1:cx, y1:cy, x2:gx, y2:gy, stroke:`var(--${grp.key})`, 'stroke-width':3, opacity:.6}, svg);
+    el('circle', {cx:gx, cy:gy, r:11, fill:`var(--${grp.key})`, stroke:'var(--surface-1)', 'stroke-width':2}, svg);
+    const glbl = el('text', {
+      x: gx + Math.cos(gMid)*20, y: gy + Math.sin(gMid)*20 + 4,
+      'text-anchor': Math.abs(Math.cos(gMid))<0.25 ? 'middle' : (Math.cos(gMid)>0?'start':'end'),
+      style:`fill:var(--${grp.key})`, 'font-size':13, 'font-weight':800
+    }, svg);
+    glbl.textContent = grp.short;
+
+    // categories inside this group
+    const cats = categories.filter(c => c.group === grp.id);
+    cats.forEach((cat, ci)=>{
+      const frac = cats.length>1 ? (ci+0.5)/cats.length : 0.5;
+      const cAngle = gStart + span*frac;
+      const catX = cx + Math.cos(cAngle)*CAT_R;
+      const catY = cy + Math.sin(cAngle)*CAT_R;
+      el('path', {d:`M${gx},${gy} Q${(gx+catX)/2},${(gy+catY)/2} ${catX},${catY}`,
+        stroke:`var(--${grp.key})`, 'stroke-width':1.5, opacity:.4, fill:'none'}, svg);
+      el('circle', {cx:catX, cy:catY, r:7, fill:`var(--${grp.key})`, stroke:'var(--surface-1)', 'stroke-width':2}, svg);
+      const clbl = el('text', {
+        x: catX + Math.cos(cAngle)*13, y: catY + Math.sin(cAngle)*13 + 3,
+        'text-anchor': Math.abs(Math.cos(cAngle))<0.25 ? 'middle' : (Math.cos(cAngle)>0?'start':'end'),
+        class:'cat-label', style:'fill:var(--text-secondary)'
+      }, svg);
+      clbl.textContent = cat.short;
+
+      // papers under this category
+      const kids = papers.filter(p=>p.cat===cat.id);
+      const n = kids.length;
+      const catSpan = (span/cats.length) * 0.82;
+      kids.forEach((p, j)=>{
+        const t0 = n>1 ? (j/(n-1))-0.5 : 0;
+        const a = cAngle + t0*catSpan;
+        const r = 330 + (j%4)*42;
+        const px = cx + Math.cos(a)*r;
+        const py = cy + Math.sin(a)*r;
+        el('path', {d:`M${catX},${catY} Q${(catX+px)/2 + Math.sin(a)*12},${(catY+py)/2 - Math.cos(a)*12} ${px},${py}`, class:'edge'}, svg);
+        const g = el('g', {class:'leaf'}, svg);
+        bindLeaf(g, p);
+        el('circle', {cx:px, cy:py, r:5.5+Math.min(degree[p.id]||0,7), fill:`var(--${grp.key})`}, g);
+        const anchor = Math.cos(a)>0.15 ? 'start' : (Math.cos(a)<-0.15 ? 'end' : 'middle');
+        const lbl = el('text', {x:px + Math.cos(a)*15, y:py + Math.sin(a)*15 + 3, 'text-anchor':anchor, class:'node-label muted-text'}, g);
+        lbl.textContent = p.short.length>17 ? p.short.slice(0,16)+'…' : p.short;
+      });
+    });
+  });
+})();
+
+/* ================= TIMELINE ================= */
+(function(){
+  const svg = document.getElementById('svg-timeline');
+  const marginL = 190, marginR = 40, marginT = 30, marginB = 40;
+  const W = 1100, H = 760;
+  const minY = 2013.5, maxY = 2026.8;
+  const laneH = (H - marginT - marginB) / categories.length;
+  const x = (yr)=> marginL + (yr-minY)/(maxY-minY) * (W-marginL-marginR);
+
+  for(let yr=2014; yr<=2026; yr+=2){
+    const gx = x(yr);
+    el('line', {x1:gx, y1:marginT, x2:gx, y2:H-marginB, stroke:'var(--gridline)', 'stroke-width':1}, svg);
+    const t = el('text', {x:gx, y:H-marginB+16, 'text-anchor':'middle', class:'muted-text', 'font-size':10}, svg);
+    t.textContent = yr;
+  }
+  el('line', {x1:marginL, y1:H-marginB, x2:W-marginR, y2:H-marginB, stroke:'var(--baseline)', 'stroke-width':1}, svg);
+
+  // order lanes by group so the 4 대분류 read as contiguous bands
+  const ordered = groups.flatMap(g => categories.filter(c => c.group === g.id));
+  ordered.forEach((cat,i)=>{
+    const laneY = marginT + i*laneH;
+    const grp = groups[cat.group];
+    const prev = i>0 ? ordered[i-1] : null;
+    const isGroupStart = !prev || prev.group !== cat.group;
+
+    // group band label on the left gutter
+    if(isGroupStart){
+      const nInGroup = ordered.filter(c=>c.group===cat.group).length;
+      el('rect', {x:marginL-8, y:laneY+2, width:4, height:laneH*nInGroup-4,
+        fill:`var(--${grp.key})`, rx:2, opacity:.8}, svg);
+      const gl = el('text', {x:8, y:laneY+laneH*nInGroup/2+4, 'text-anchor':'start',
+        style:`fill:var(--${grp.key})`, 'font-size':11, 'font-weight':800}, svg);
+      gl.textContent = grp.short;
+    }
+
+    el('line', {x1:marginL, y1:laneY+laneH, x2:W-marginR, y2:laneY+laneH,
+      stroke:'var(--gridline)', 'stroke-width': isGroupStart?0:1}, svg);
+    const lbl = el('text', {x:marginL-16, y:laneY+laneH/2+4, 'text-anchor':'end', class:'muted-text', 'font-size':11}, svg);
+    lbl.textContent = cat.short;
+
+    const kids = papers.filter(p=>p.cat===cat.id).sort((a,b)=>a.year-b.year);
+    const used = [];
+    kids.forEach((p)=>{
+      const px = x(p.year);
+      let py = laneY + laneH/2;
+      let tries=0;
+      while(used.some(u=>Math.abs(u.x-px)<26 && Math.abs(u.y-py)<11) && tries<6){
+        py = laneY + laneH/2 + ((tries%2===0)?1:-1)*Math.ceil((tries+1)/2)*13;
+        tries++;
+      }
+      used.push({x:px,y:py});
+      const g = el('g', {class:'leaf'}, svg);
+      bindLeaf(g, p);
+      el('circle', {cx:px, cy:py, r:6, fill:`var(--${grp.key})`}, g);
+    });
+  });
+})();
+
+/* ================= NETWORK ================= */
+(function(){
+  const svg = document.getElementById('svg-network');
+  const W = 1100, H = 700;
+  const nodes = papers.map((p,i)=>({
+    id:p.id, cat:p.cat, deg: degree[p.id]||0,
+    x: W/2 + Math.cos(i*2.399963)* (120+ (i%7)*40),
+    y: H/2 + Math.sin(i*2.399963)* (120+ (i%7)*40),
+    vx:0, vy:0
+  }));
+  const nodeById = Object.fromEntries(nodes.map(n=>[n.id,n]));
+  const links = edges.map(([a,b])=>({source:a, target:b}));
+
+  for(let iter=0; iter<400; iter++){
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const a=nodes[i], b=nodes[j];
+        let dx=a.x-b.x, dy=a.y-b.y;
+        let d2 = dx*dx+dy*dy || 0.01;
+        let d = Math.sqrt(d2);
+        const force = 2600/d2;
+        const fx = (dx/d)*force, fy=(dy/d)*force;
+        a.vx += fx; a.vy += fy;
+        b.vx -= fx; b.vy -= fy;
+      }
+    }
+    links.forEach(l=>{
+      const a = nodeById[l.source], b = nodeById[l.target];
+      let dx=b.x-a.x, dy=b.y-a.y;
+      let d = Math.sqrt(dx*dx+dy*dy) || 0.01;
+      const target = 130;
+      const force = (d-target) * 0.02;
+      const fx=(dx/d)*force, fy=(dy/d)*force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+    nodes.forEach(n=>{
+      n.vx += (W/2 - n.x)*0.003;
+      n.vy += (H/2 - n.y)*0.003;
+      n.x += n.vx; n.y += n.vy;
+      n.vx *= 0.75; n.vy *= 0.75;
+      n.x = Math.max(40, Math.min(W-40, n.x));
+      n.y = Math.max(40, Math.min(H-40, n.y));
+    });
+  }
+
+  const edgeEls = [];
+  links.forEach(l=>{
+    const a = nodeById[l.source], b = nodeById[l.target];
+    const line = el('line', {x1:a.x,y1:a.y,x2:b.x,y2:b.y, class:'edge'}, svg);
+    edgeEls.push({el:line, a:l.source, b:l.target});
+  });
+
+  const nodeEls = {};
+  nodes.forEach(n=>{
+    const p = paperById[n.id];
+    const cat = categories[n.cat];
+    const g = el('g', {class:'net-node'}, svg);
+    const r = 5 + Math.min(n.deg, 8)*1.4;
+    el('circle', {cx:n.x, cy:n.y, r, fill:`var(--${cat.key})`}, g);
+    if(r>9){
+      const lbl = el('text', {x:n.x, y:n.y+r+10, 'text-anchor':'middle', class:'muted-text'}, g);
+      lbl.textContent = p.short.length>16 ? p.short.slice(0,15)+'…' : p.short;
+    }
+    g.setAttribute('tabindex','0');
+    g.setAttribute('role','button');
+    g.setAttribute('aria-label', p.short + ' 상세보기');
+    g.addEventListener('mouseenter', (e)=>{
+      showTip(e, `<b>${p.short}</b><div class="meta">${cat.name} · ${fmtYear(p.year)} · 연결 ${n.deg}개</div>${p.desc}<div class="hint2">클릭하면 상세 카드가 열립니다</div>`);
+      edgeEls.forEach(le=>{
+        if(le.a===n.id || le.b===n.id) le.el.classList.add('hi'); else le.el.classList.add('dim');
+      });
+      Object.values(nodeEls).forEach(ng=>{
+        if(ng!==g) ng.classList.add('dim');
+      });
+    });
+    g.addEventListener('mousemove', moveTip);
+    g.addEventListener('mouseleave', ()=>{
+      hideTip();
+      edgeEls.forEach(le=>{le.el.classList.remove('hi'); le.el.classList.remove('dim');});
+      Object.values(nodeEls).forEach(ng=>ng.classList.remove('dim'));
+    });
+    g.addEventListener('click', ()=>openModal(p.id));
+    g.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openModal(p.id); } });
+    nodeEls[n.id] = g;
+  });
+})();
+
+/* ================= STACK / LICENSE TABLE ================= */
+(function(){
+  const body = document.getElementById('stack-body');
+  stack.forEach(s=>{
+    const cat = categories[s.cat];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="cat-dot" style="background:var(--${cat.key})"></span>${cat.short}</td>
+      <td><strong>${s.name}</strong><div class="stack-desc">${s.org}</div></td>
+      <td><span class="badge">${s.license}</span></td>
+      <td>${s.desc}</td>
+      <td><a class="repo-link" href="${s.url}" target="_blank" rel="noopener">저장소 →</a></td>
+    `;
+    body.appendChild(tr);
+  });
+})();
+</script>
+</body>
+</html>
