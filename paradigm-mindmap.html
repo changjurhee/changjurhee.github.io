@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>복잡성과의 투쟁: 프로그래밍 패러다임 마인드맵</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#E9EEF0; --grid:#D6DEE2; --ink:#1B2A35; --muted:#5A6B77; --card:#F7F9FA;
+  --c1:#A8741F; --c2:#2C7A73; --c3:#74488A; --c4:#2D5BA3; --link:#9AA9B3;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#141C22; --grid:#1E2830; --ink:#E3EAEE; --muted:#93A3AE; --card:#1A242B;
+    --c1:#D29B42; --c2:#4FB0A6; --c3:#B184C8; --c4:#6E98E0; --link:#3E4D57;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141C22; --grid:#1E2830; --ink:#E3EAEE; --muted:#93A3AE; --card:#1A242B;
+  --c1:#D29B42; --c2:#4FB0A6; --c3:#B184C8; --c4:#6E98E0; --link:#3E4D57;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0; color:var(--ink); background:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  line-height:1.6;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:2rem 1.25rem 3rem}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:1.25rem}
+h1{font-size:clamp(1.6rem,3.2vw,2.3rem);font-weight:700;margin:0;letter-spacing:-0.02em;line-height:1.2}
+.sub{margin:.35rem 0 0;color:var(--muted);font-size:.95rem}
+.controls{display:flex;gap:.5rem}
+button.ctl{
+  font:inherit;font-size:.85rem;font-weight:500;color:var(--ink);background:var(--card);
+  border:1px solid var(--link);border-radius:6px;padding:.4rem .8rem;cursor:pointer;
+}
+button.ctl:hover{border-color:var(--ink)}
+button.ctl:focus-visible{outline:2px solid var(--c4);outline-offset:2px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1.25rem;align-items:start}
+.mapbox{overflow-x:auto;background:color-mix(in srgb,var(--paper) 70%,transparent);border:1px solid var(--link);border-radius:10px;padding:.5rem 0}
+svg{display:block}
+.node{cursor:pointer;transition:transform .45s cubic-bezier(.2,.7,.2,1),opacity .3s}
+.node:focus{outline:none}
+.node:focus-visible .box{stroke:var(--ink);stroke-width:2.5}
+.node.hidden{opacity:0;pointer-events:none}
+.link{fill:none;stroke:var(--link);stroke-width:1.5;transition:d .45s cubic-bezier(.2,.7,.2,1),opacity .3s}
+.link.hidden{opacity:0}
+.node.active .box{stroke-width:2.5}
+.t-root{font-size:16px;font-weight:700;fill:var(--paper)}
+.t-root2{font-size:12px;fill:var(--paper);opacity:.75}
+.t-era{font-size:14px;font-weight:700;fill:#fff}
+.t-years{font-size:12px;fill:#fff;opacity:.85}
+.t-tag{font-size:11.5px;font-weight:700}
+.t-leaf{font-size:13.5px;fill:var(--ink)}
+.t-gauge{font-size:12px;fill:var(--muted)}
+.t-gauge-title{font-size:12px;font-weight:700;fill:var(--ink)}
+aside{
+  position:sticky;top:calc(1rem + env(safe-area-inset-top,0px));
+  background:var(--card);border:1px solid var(--link);border-radius:10px;padding:1.25rem 1.25rem 1.4rem;
+  border-top:5px solid var(--accent,var(--ink));
+}
+aside .era{font-size:.8rem;font-weight:700;color:var(--accent,var(--muted));margin:0 0 .3rem}
+aside h2{font-size:1.2rem;margin:0 0 .6rem;line-height:1.35;letter-spacing:-0.01em}
+aside p{margin:0 0 .7rem;font-size:.95rem}
+aside .hint{color:var(--muted);font-size:.82rem;margin-top:1rem;margin-bottom:0}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  aside{position:static}
+}
+footer.refs{margin-top:2.5rem;padding-top:1.25rem;border-top:1px solid var(--link);max-width:72ch}
+footer.refs h2{font-size:1rem;margin:0 0 .75rem}
+footer.refs ol{margin:0;padding-left:1.4rem}
+footer.refs li{margin-bottom:.9rem;font-size:.92rem}
+footer.refs .cite{display:block}
+footer.refs .note{display:block;color:var(--muted);font-size:.85rem;margin-top:.2rem}
+footer.refs a{color:var(--c4);text-underline-offset:2px}
+footer.refs a:focus-visible{outline:2px solid var(--c4);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){
+  .node,.link{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>복잡성과의 투쟁</h1>
+      <p class="sub">프로그래밍 패러다임은 인지 부하를 통제하기 위해 어떤 무기를 꺼내 왔나</p>
+    </div>
+    <div class="controls">
+      <button class="ctl" id="expandAll" type="button">모두 펼치기</button>
+      <button class="ctl" id="collapseAll" type="button">모두 접기</button>
+    </div>
+  </header>
+  <div class="layout">
+    <div class="mapbox"><svg id="map" width="900" height="600" role="img" aria-label="프로그래밍 패러다임 진화 마인드맵"></svg></div>
+    <aside id="panel" aria-live="polite"></aside>
+  </div>
+  <footer class="refs">
+    <h2>참고 문헌</h2>
+    <ol>
+      <li>
+        <span class="cite">Felienne Hermans, <i>The Programmer&#39;s Brain: What every programmer needs to know about cognition</i>, Manning, 2021. ISBN 9781617298677.</span>
+        <span class="cite">한국어판: 펠리너 헤르만스, 《프로그래머의 뇌: 훌륭한 프로그래머가 알아야 할 인지과학의 모든 것》, 제이펍, 2022.</span>
+        <span class="note">단기 기억, 장기 기억, 작업 기억과 청킹을 통해 코드를 읽고 쓸 때의 인지 부하를 설명합니다. 이 마인드맵의 중심 개념인 &#39;인지 부하&#39;의 배경 자료입니다.</span>
+        <span class="cite"><a href="https://manning.com/books/the-programmers-brain" target="_blank" rel="noopener">원서 (Manning)</a>  /  <a href="https://ebook-product.kyobobook.co.kr/dig/epd/ebook/E000002993438" target="_blank" rel="noopener">한국어판 eBook (교보문고)</a></span>
+      </li>
+    </ol>
+  </footer>
+</div>
+
+<script>
+const ROOT = {
+  title:'복잡성과 인지 부하의 통제',
+  body:[
+    '프로그래밍 패러다임의 진화는 인간의 뇌가 감당해야 하는 복잡성과 인지 부하를 통제하려는 투쟁의 과정입니다. 시대마다 새로운 형태의 복잡성이 나타났고, 프로그래머는 그때마다 새 무기를 꺼내 들었습니다.',
+    '결국 프로그래머의 역할은 기계어에 가까운 저수준 로직 구현에서 추상화의 사다리를 타고 올라, 시스템 전체의 아키텍처를 조율하는 방향으로 진화해 왔습니다.'
+  ]
+};
+
+// 화면 위쪽일수록 추상화 수준이 높다
+const ERAS = [
+  {id:'e4', color:'var(--c4)', title:'인텐트 기반 선언적 추상화', years:'2020s ~  로우코드와 AI',
+   summary:'컴퓨터에게 어떻게(How) 할지를 지시하는 명령형에서, 무엇(What)을 원하는지 선언하는 방향으로 패러다임이 넘어오고 있습니다.',
+   leaves:[
+    {k:'전환', label:'How에서 What으로', detail:'명령형 지시에서 의도의 선언으로. 구현 방법보다 원하는 결과를 기술하는 것이 프로그래머의 주된 일이 됩니다.'},
+    {k:'무기', label:'로우코드 플랫폼', detail:'복잡한 고속 산업용 장비 제어 시스템을 로우코드 플랫폼으로 추상화하여, 비즈니스 로직에만 집중할 수 있게 합니다.'},
+    {k:'무기', label:'AI 에이전트 위임', detail:'AI 에이전트에게 적절한 컨텍스트를 제공하고 세부 구현을 위임하는 아키텍처가 이 패러다임의 핵심입니다.'},
+    {k:'성과', label:'아키텍처 조율자', detail:'프로그래머는 저수준 구현자에서 시스템 전체의 아키텍처를 조율하는 역할로 올라섭니다.'}
+   ]},
+  {id:'e3', color:'var(--c3)', title:'부작용 통제와 안전성 보장', years:'2010s ~  멀티/함수형',
+   summary:'멀티코어 시대가 도래하며 동시성과 메모리 관리가 최대 화두가 되었고, 함수형 프로그래밍의 장점이 기존 언어들에 흡수되었습니다.',
+   leaves:[
+    {k:'위협', label:'동시성과 메모리', detail:'멀티코어 환경에서 공유 상태가 만드는 동시성 문제, 그리고 메모리 관리의 위험이 최대 화두로 떠올랐습니다.'},
+    {k:'무기', label:'상태 변경 최소화', detail:'상태 변경을 최소화해 버그를 줄이는 함수형 프로그래밍의 장점이 기존 언어들에 흡수되었습니다.'},
+    {k:'기술', label:'Modern C++', detail:'람다(Lambda), 뷰(View), 컨셉(Concept) 등을 도입하며 함수형과 제네릭 표현력을 끌어올렸습니다.'},
+    {k:'기술', label:'Rust', detail:'소유권(Ownership) 모델과 트레이트(Trait)로 메모리 안전성을 컴파일 단계에서 강제합니다.'}
+   ]},
+  {id:'e2', color:'var(--c2)', title:'상태와 데이터의 캡슐화', years:'1990s ~ 2000s  객체지향',
+   summary:'시스템이 거대해지면서 행위(함수)와 상태(데이터)를 하나로 묶어 현실 세계를 모델링하는 객체지향 시대가 열렸습니다.',
+   leaves:[
+    {k:'위협', label:'순차 명령의 한계', detail:'GW-BASIC처럼 순차적인 명령어의 나열만으로는 복잡해지는 비즈니스 로직을 감당할 수 없었습니다.'},
+    {k:'무기', label:'캡슐화와 다형성', detail:'행위와 상태를 한 덩어리로 묶고, 다형성으로 같은 인터페이스 뒤에 다른 구현을 숨깁니다.'},
+    {k:'기술', label:'C++, Java', detail:'객체지향 시대를 이끈 대표 언어들입니다.'},
+    {k:'성과', label:'독립적인 부품 설계', detail:'시스템의 각 부품을 독립적으로 설계하고 교체할 수 있게 되었습니다.'}
+   ]},
+  {id:'e1', color:'var(--c1)', title:'제어 흐름의 통제', years:'1970s ~ 1980s  구조적',
+   summary:'초창기 프로그래밍은 컴퓨터의 실행 순서에 인간이 맞추는 형태였습니다. 스파게티 코드가 한계에 부딪히자 구조적 패러다임이 등장했습니다.',
+   leaves:[
+    {k:'위협', label:'GOTO 스파게티 코드', detail:'무분별한 GOTO 문으로 실행 흐름이 얽히면서, 코드를 읽고 고치는 일 자체가 한계에 부딪혔습니다.'},
+    {k:'무기', label:'제어 구조와 함수', detail:'if, while, for 같은 제어 구조와 함수(Function) 단위로 로직을 쪼개는 방식이 도입되었습니다.'},
+    {k:'성과', label:'첫 번째 복잡도 감소', detail:'거대한 흐름을 논리적인 블록으로 나누어 복잡도를 처음으로 낮춘 시기입니다.'}
+   ]}
+];
+
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('map');
+const panel=document.getElementById('panel');
+const W=900, ROOT_X=190, ERA_X=455, LEAF_X=752;
+const ROOT_W=240, ERA_W=230, LEAF_W=250;
+const ROOT_H=58, ERA_H=52, LEAF_H=34, GAP=44, ERA_GAP=26, TOP=48;
+const open=Object.fromEntries(ERAS.map(e=>[e.id,true]));
+const els={};
+let active=null;
+
+function el(tag,attrs,parent){
+  const n=document.createElementNS(NS,tag);
+  for(const k in attrs) n.setAttribute(k,attrs[k]);
+  if(parent) parent.appendChild(n);
+  return n;
+}
+function txt(parent,x,y,cls,s,fill){
+  const t=el('text',{x,y,class:cls,'dominant-baseline':'middle'},parent);
+  if(fill) t.style.fill=fill;
+  t.textContent=s; return t;
+}
+function curve(x1,y1,x2,y2){
+  const m=(x1+x2)/2;
+  return `M${x1},${y1} C${m},${y1} ${m},${y2} ${x2},${y2}`;
+}
+
+// 레이어: 게이지, 링크, 노드
+const gGauge=el('g',{},svg), gLinks=el('g',{},svg), gNodes=el('g',{},svg);
+
+// 추상화의 사다리 게이지
+const gaugeLine=el('line',{x1:28,x2:28,stroke:'var(--muted)','stroke-width':1.5},gGauge);
+const gaugeHead=el('path',{fill:'var(--muted)'},gGauge);
+const gTitle=txt(gGauge,0,0,'t-gauge-title','추상화의 사다리');
+const gTop=txt(gGauge,0,0,'t-gauge','What 선언');
+const gBot=txt(gGauge,0,0,'t-gauge','How 지시');
+[gTitle,gTop,gBot].forEach(t=>t.setAttribute('x',42));
+
+function makeNode(kind,data,era){
+  const g=el('g',{class:'node',tabindex:0,role:'button'},gNodes);
+  if(kind==='root'){
+    el('rect',{class:'box',x:-ROOT_W/2,y:-ROOT_H/2,width:ROOT_W,height:ROOT_H,rx:8,fill:'var(--ink)',stroke:'var(--ink)'},g);
+    txt(g,-ROOT_W/2+16,-9,'t-root',data.title);
+    txt(g,-ROOT_W/2+16,13,'t-root2','패러다임 진화의 본질');
+    g.setAttribute('aria-label',data.title);
+  }else if(kind==='era'){
+    el('rect',{class:'box',x:-ERA_W/2,y:-ERA_H/2,width:ERA_W,height:ERA_H,rx:8,fill:data.color,stroke:data.color},g);
+    txt(g,-ERA_W/2+14,-9,'t-era',data.title);
+    txt(g,-ERA_W/2+14,12,'t-years',data.years);
+    const tg=el('g',{transform:`translate(${ERA_W/2},0)`},g);
+    el('circle',{r:10,fill:'var(--card)',stroke:data.color,'stroke-width':2},tg);
+    g._sign=txt(tg,0,1,'t-tag','−',data.color);
+    g._sign.setAttribute('text-anchor','middle');
+    g.setAttribute('aria-expanded','true');
+    g.setAttribute('aria-label',data.title+' 펼치기 또는 접기');
+  }else{
+    el('rect',{class:'box',x:-LEAF_W/2,y:-LEAF_H/2,width:LEAF_W,height:LEAF_H,rx:17,fill:'var(--card)',stroke:era.color,'stroke-width':1.5},g);
+    txt(g,-LEAF_W/2+14,1,'t-tag',data.k,era.color);
+    txt(g,-LEAF_W/2+50,1,'t-leaf',data.label);
+    g.setAttribute('aria-label',data.k+' '+data.label);
+  }
+  return g;
+}
+
+els.root=makeNode('root',ROOT);
+ERAS.forEach(e=>{
+  els[e.id]={node:makeNode('era',e),link:el('path',{class:'link'},gLinks),leaves:[]};
+  e.leaves.forEach(l=>{
+    els[e.id].leaves.push({node:makeNode('leaf',l,e),link:el('path',{class:'link'},gLinks),data:l});
+  });
+});
+
+function layout(){
+  let y=TOP; const eraYs=[];
+  ERAS.forEach((e,i)=>{
+    const E=els[e.id];
+    if(open[e.id]){
+      const ys=e.leaves.map(()=>{const v=y; y+=GAP; return v;});
+      E.y=(ys[0]+ys[ys.length-1])/2;
+      E.leaves.forEach((L,j)=>{L.y=ys[j];});
+    }else{
+      E.y=y; y+=GAP;
+      E.leaves.forEach(L=>{L.y=E.y;});
+    }
+    eraYs.push(E.y);
+    if(i<ERAS.length-1) y+=ERA_GAP;
+  });
+  const H=y-GAP+TOP+10;
+  svg.setAttribute('height',H);
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const rootY=(eraYs[0]+eraYs[eraYs.length-1])/2;
+  els.root.style.transform=`translate(${ROOT_X}px,${rootY}px)`;
+
+  ERAS.forEach(e=>{
+    const E=els[e.id], isOpen=open[e.id];
+    E.node.style.transform=`translate(${ERA_X}px,${E.y}px)`;
+    E.link.setAttribute('d',curve(ROOT_X+ROOT_W/2,rootY,ERA_X-ERA_W/2,E.y));
+    E.node._sign.textContent=isOpen?'−':'+';
+    E.node.setAttribute('aria-expanded',String(isOpen));
+    E.leaves.forEach(L=>{
+      const x=isOpen?LEAF_X:ERA_X;
+      L.node.style.transform=`translate(${x}px,${L.y}px)`;
+      L.node.classList.toggle('hidden',!isOpen);
+      L.node.setAttribute('tabindex',isOpen?0:-1);
+      L.node.setAttribute('aria-hidden',String(!isOpen));
+      L.link.setAttribute('d',isOpen?curve(ERA_X+ERA_W/2+10,E.y,LEAF_X-LEAF_W/2,L.y):curve(ERA_X+ERA_W/2,E.y,ERA_X+ERA_W/2,E.y));
+      L.link.classList.toggle('hidden',!isOpen);
+    });
+  });
+
+  // 게이지: 가장 아래 시대(How)에서 가장 위 시대(What)로
+  const top=els[ERAS[0].id].y, bot=els[ERAS[ERAS.length-1].id].y;
+  gaugeLine.setAttribute('y1',top-6); gaugeLine.setAttribute('y2',bot+18);
+  gaugeHead.setAttribute('d',`M22,${top-4} L28,${top-16} L34,${top-4} Z`);
+  gTitle.setAttribute("y",top-34);
+  gTop.setAttribute('y',top-10);
+  gBot.setAttribute('y',bot+12);
+}
+
+function show(kind,data,era,nodeEl){
+  if(active) active.classList.remove('active');
+  active=nodeEl; if(nodeEl) nodeEl.classList.add('active');
+  panel.style.setProperty('--accent',era?era.color:'var(--ink)');
+  let html='';
+  if(kind==='root'){
+    html=`<p class="era">중심 주제</p><h2>${data.title}</h2>`+data.body.map(p=>`<p>${p}</p>`).join('');
+  }else if(kind==='era'){
+    html=`<p class="era">${data.years}</p><h2>${data.title}</h2><p>${data.summary}</p>`;
+  }else{
+    html=`<p class="era">${era.title}  /  ${data.k}</p><h2>${data.label}</h2><p>${data.detail}</p>`;
+  }
+  html+=`<p class="hint">시대 노드를 누르면 가지를 펼치거나 접습니다.</p>`;
+  panel.innerHTML=html;
+}
+
+function bind(nodeEl,fn){
+  nodeEl.addEventListener('click',fn);
+  nodeEl.addEventListener('keydown',ev=>{
+    if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();fn();}
+  });
+}
+bind(els.root,()=>show('root',ROOT,null,els.root));
+ERAS.forEach(e=>{
+  const E=els[e.id];
+  bind(E.node,()=>{open[e.id]=!open[e.id]; layout(); show('era',e,e,E.node);});
+  E.leaves.forEach(L=>bind(L.node,()=>show('leaf',L.data,e,L.node)));
+});
+document.getElementById('expandAll').onclick=()=>{ERAS.forEach(e=>open[e.id]=true);layout();};
+document.getElementById('collapseAll').onclick=()=>{ERAS.forEach(e=>open[e.id]=false);layout();};
+
+layout();
+show('root',ROOT,null,els.root);
+</script>
+</body>
+</html>
