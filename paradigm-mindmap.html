@@ -68,6 +68,13 @@ svg{display:block}
 .link{fill:none;stroke:var(--link);stroke-width:1.5;transition:d .45s cubic-bezier(.2,.7,.2,1),opacity .3s}
 .link.hidden{opacity:0}
 .node.active .box{stroke-width:2.5}
+.node:focus,a.nlink:focus{outline:none}
+a.nlink:focus-visible .box{stroke:var(--ink);stroke-width:2.5}
+.node.url .box{stroke-dasharray:5 3}
+aside a.go{display:inline-block;margin-top:.2rem;padding:.45rem .85rem;border-radius:6px;font-size:.88rem;font-weight:700;color:#fff;background:var(--accent,var(--c4));text-decoration:none}
+aside a.go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sub a.up{color:var(--c4);font-weight:500;text-underline-offset:2px}
+
 .t-root{font-size:16px;font-weight:700;fill:var(--paper)}
 .t-root2{font-size:12px;fill:var(--paper);opacity:.75}
 .t-era{font-size:14px;font-weight:700;fill:#fff}
@@ -107,7 +114,7 @@ footer.refs a:focus-visible{outline:2px solid var(--c4);outline-offset:2px}
   <header>
     <div>
       <h1>복잡성과의 투쟁</h1>
-      <p class="sub">프로그래밍 패러다임은 인지 부하를 통제하기 위해 어떤 무기를 꺼내 왔나</p>
+      <p class="sub">프로그래밍 패러다임은 인지 부하를 통제하기 위해 어떤 무기를 꺼내 왔나. <a class="up" href="./programmer-survival.html" target="_blank" rel="noopener">프로그래머로 살아남기</a>의 두 번째 변화를 뒷받침하는 페이지입니다.</p>
     </div>
     <div class="controls">
       <button class="ctl" id="expandAll" type="button">모두 펼치기</button>
@@ -132,11 +139,24 @@ footer.refs a:focus-visible{outline:2px solid var(--c4);outline-offset:2px}
         <span class="note">배경 삽화로 사용. 퍼블릭 도메인.</span>
         <span class="cite"><a href="https://digitalcollections.nypl.org/items/747b8460-c554-012f-6045-58d385a7bc34" target="_blank" rel="noopener">The New York Public Library Digital Collections</a></span>
       </li>
+      <li>
+        <span class="cite">프로그래머로 살아남기: 『프로그래머의 뇌』로 읽는 AI 전환기</span>
+        <span class="note">이 페이지의 상위 페이지입니다. 두 번째 변화(인지 부하 관리)의 배경으로 연결됩니다.</span>
+        <span class="cite"><a href="./programmer-survival.html" target="_blank" rel="noopener">프로그래머로 살아남기 열기</a></span>
+      </li>
+      <li>
+        <span class="cite">일정표에서 악보로: AI 시대, 개발 일정의 무게 중심이 옮겨간다</span>
+        <span class="note">2020년대 가지(How에서 What으로)를 개발 일정 관점으로 이어서 다룬 관련 페이지입니다.</span>
+        <span class="cite"><a href="./schedule-to-score.html" target="_blank" rel="noopener">일정표에서 악보로 열기</a></span>
+      </li>
     </ol>
   </footer>
 </div>
 
 <script>
+const SURVIVAL_URL='./programmer-survival.html';
+const SCHEDULE_URL='./schedule-to-score.html';
+
 const ROOT = {
   title:'복잡성과 인지 부하의 통제',
   body:[
@@ -153,7 +173,8 @@ const ERAS = [
     {k:'전환', label:'How에서 What으로', detail:'명령형 지시에서 의도의 선언으로. 구현 방법보다 원하는 결과를 기술하는 것이 프로그래머의 주된 일이 됩니다.'},
     {k:'무기', label:'로우코드 플랫폼', detail:'복잡한 고속 산업용 장비 제어 시스템을 로우코드 플랫폼으로 추상화하여, 비즈니스 로직에만 집중할 수 있게 합니다.'},
     {k:'무기', label:'AI 에이전트 위임', detail:'AI 에이전트에게 적절한 컨텍스트를 제공하고 세부 구현을 위임하는 아키텍처가 이 패러다임의 핵심입니다.'},
-    {k:'성과', label:'아키텍처 조율자', detail:'프로그래머는 저수준 구현자에서 시스템 전체의 아키텍처를 조율하는 역할로 올라섭니다.'}
+    {k:'성과', label:'아키텍처 조율자', detail:'프로그래머는 저수준 구현자에서 시스템 전체의 아키텍처를 조율하는 역할로 올라섭니다.'},
+    {k:'연결', label:'일정표에서 악보로', url:SCHEDULE_URL, go:'일정표에서 악보로 열기', detail:'How에서 What으로 넘어가면 개발 일정은 어떻게 바뀔까요. 구현 비중은 줄고 문제 정의, 컨텍스트 설계, 검증의 비중이 커지는 흐름을 이어서 정리했습니다.'}
    ]},
   {id:'e3', color:'var(--c3)', title:'부작용 통제와 안전성 보장', years:'2010s ~  멀티/함수형',
    summary:'멀티코어 시대가 도래하며 동시성과 메모리 관리가 최대 화두가 되었고, 함수형 프로그래밍의 장점이 기존 언어들에 흡수되었습니다.',
@@ -205,20 +226,26 @@ function curve(x1,y1,x2,y2){
   const m=(x1+x2)/2;
   return `M${x1},${y1} C${m},${y1} ${m},${y2} ${x2},${y2}`;
 }
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-// 레이어: 게이지, 링크, 노드
 const gGauge=el('g',{},svg), gLinks=el('g',{},svg), gNodes=el('g',{},svg);
 
-// 추상화의 사다리 게이지
+// 추상화의 사다리 게이지: How 지시에서 What 선언으로
 const gaugeLine=el('line',{x1:28,x2:28,stroke:'var(--muted)','stroke-width':1.5},gGauge);
 const gaugeHead=el('path',{fill:'var(--muted)'},gGauge);
-const gTitle=txt(gGauge,0,0,'t-gauge-title','추상화의 사다리');
-const gTop=txt(gGauge,0,0,'t-gauge','What 선언');
-const gBot=txt(gGauge,0,0,'t-gauge','How 지시');
-[gTitle,gTop,gBot].forEach(t=>t.setAttribute('x',42));
+const gTitle=txt(gGauge,42,0,'t-gauge-title','추상화의 사다리');
+const gTop=txt(gGauge,42,0,'t-gauge','What 선언');
+const gBot=txt(gGauge,42,0,'t-gauge','How 지시');
 
 function makeNode(kind,data,era){
-  const g=el('g',{class:'node',tabindex:0,role:'button'},gNodes);
+  let host=gNodes, anchor=null;
+  if(kind==='leaf' && data.url){
+    anchor=el('a',{class:'nlink',href:data.url,target:'_blank',rel:'noopener','aria-label':data.label+' 새 탭에서 열기'},gNodes);
+    host=anchor;
+  }
+  const g=el('g',{class:'node'},host);
+  if(!anchor){g.setAttribute('tabindex',0);g.setAttribute('role','button');}
+  g._focus=anchor||g;
   if(kind==='root'){
     el('rect',{class:'box',x:-ROOT_W/2,y:-ROOT_H/2,width:ROOT_W,height:ROOT_H,rx:8,fill:'var(--ink)',stroke:'var(--ink)'},g);
     txt(g,-ROOT_W/2+16,-9,'t-root',data.title);
@@ -230,15 +257,15 @@ function makeNode(kind,data,era){
     txt(g,-ERA_W/2+14,12,'t-years',data.years);
     const tg=el('g',{transform:`translate(${ERA_W/2},0)`},g);
     el('circle',{r:10,fill:'var(--card)',stroke:data.color,'stroke-width':2},tg);
-    g._sign=txt(tg,0,1,'t-tag','−',data.color);
+    g._sign=txt(tg,0,1,'t-tag','+',data.color);
     g._sign.setAttribute('text-anchor','middle');
-    g.setAttribute('aria-expanded','true');
     g.setAttribute('aria-label',data.title+' 펼치기 또는 접기');
   }else{
+    if(data.url) g.classList.add('url');
     el('rect',{class:'box',x:-LEAF_W/2,y:-LEAF_H/2,width:LEAF_W,height:LEAF_H,rx:17,fill:'var(--card)',stroke:era.color,'stroke-width':1.5},g);
     txt(g,-LEAF_W/2+14,1,'t-tag',data.k,era.color);
     txt(g,-LEAF_W/2+50,1,'t-leaf',data.label);
-    g.setAttribute('aria-label',data.k+' '+data.label);
+    if(!anchor) g.setAttribute('aria-label',data.k+' '+data.label);
   }
   return g;
 }
@@ -282,18 +309,17 @@ function layout(){
       const x=isOpen?LEAF_X:ERA_X;
       L.node.style.transform=`translate(${x}px,${L.y}px)`;
       L.node.classList.toggle('hidden',!isOpen);
-      L.node.setAttribute('tabindex',isOpen?0:-1);
-      L.node.setAttribute('aria-hidden',String(!isOpen));
+      L.node._focus.setAttribute('tabindex',isOpen?0:-1);
+      L.node._focus.setAttribute('aria-hidden',String(!isOpen));
       L.link.setAttribute('d',isOpen?curve(ERA_X+ERA_W/2+10,E.y,LEAF_X-LEAF_W/2,L.y):curve(ERA_X+ERA_W/2,E.y,ERA_X+ERA_W/2,E.y));
       L.link.classList.toggle('hidden',!isOpen);
     });
   });
 
-  // 게이지: 가장 아래 시대(How)에서 가장 위 시대(What)로
   const top=els[ERAS[0].id].y, bot=els[ERAS[ERAS.length-1].id].y;
   gaugeLine.setAttribute('y1',top-6); gaugeLine.setAttribute('y2',bot+18);
   gaugeHead.setAttribute('d',`M22,${top-4} L28,${top-16} L34,${top-4} Z`);
-  gTitle.setAttribute("y",top-34);
+  gTitle.setAttribute('y',top-34);
   gTop.setAttribute('y',top-10);
   gBot.setAttribute('y',bot+12);
 }
@@ -304,21 +330,24 @@ function show(kind,data,era,nodeEl){
   panel.style.setProperty('--accent',era?era.color:'var(--ink)');
   let html='';
   if(kind==='root'){
-    html=`<p class="era">중심 주제</p><h2>${data.title}</h2>`+data.body.map(p=>`<p>${p}</p>`).join('');
+    html=`<p class="era">중심 주제</p><h2>${esc(data.title)}</h2>`+data.body.map(p=>`<p>${esc(p)}</p>`).join('');
   }else if(kind==='era'){
-    html=`<p class="era">${data.years}</p><h2>${data.title}</h2><p>${data.summary}</p>`;
+    html=`<p class="era">${esc(data.years)}</p><h2>${esc(data.title)}</h2><p>${esc(data.summary)}</p>`;
   }else{
-    html=`<p class="era">${era.title}  /  ${data.k}</p><h2>${data.label}</h2><p>${data.detail}</p>`;
+    html=`<p class="era">${esc(era.title)}  /  ${esc(data.k)}</p><h2>${esc(data.label)}</h2><p>${esc(data.detail)}</p>`;
+    if(data.url) html+=`<a class="go" href="${esc(data.url)}" target="_blank" rel="noopener">${esc(data.go||"관련 페이지 열기")}</a>`;
   }
-  html+=`<p class="hint">시대 노드를 누르면 가지를 펼치거나 접습니다.</p>`;
+  html+=`<p class="hint">색이 칠해진 가지를 누르면 펼치거나 접습니다. 점선 노드는 관련 페이지로 연결됩니다.</p>`;
   panel.innerHTML=html;
 }
 
 function bind(nodeEl,fn){
   nodeEl.addEventListener('click',fn);
-  nodeEl.addEventListener('keydown',ev=>{
-    if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();fn();}
-  });
+  if(nodeEl._focus===nodeEl){
+    nodeEl.addEventListener('keydown',ev=>{
+      if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();fn();}
+    });
+  }
 }
 bind(els.root,()=>show('root',ROOT,null,els.root));
 ERAS.forEach(e=>{
