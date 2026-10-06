@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG 연구 동향 맵</title>
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --panel2:#eef1f7; --text:#1b1f2a; --muted:#5b6475; --line:#d5dae4;
+  --root:#1e2f80; --root-text:#ffffff;
+  --c1:#3b82f6; --c2:#d4a017; --c3:#16a34a;
+  --mono:ui-monospace,"JetBrains Mono","D2Coding",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121317; --panel:#1b1d23; --panel2:#23262e; --text:#e8eaf0; --muted:#9aa3b5; --line:#343844;
+    --root:#1e2f80; --root-text:#ffffff;
+    --c1:#8ec5ff; --c2:#f4d06f; --c3:#4ade80;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121317; --panel:#1b1d23; --panel2:#23262e; --text:#e8eaf0; --muted:#9aa3b5; --line:#343844;
+  --root:#1e2f80; --root-text:#ffffff;
+  --c1:#8ec5ff; --c2:#f4d06f; --c3:#4ade80;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Pretendard","Noto Sans KR",-apple-system,"Segoe UI",sans-serif;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:clamp(24px,4vw,36px);font-weight:600;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 24px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+button.tb{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:999px;
+  padding:8px 16px;font:inherit;font-size:14px;cursor:pointer}
+button.tb:hover{border-color:var(--c1)}
+.hint{margin-left:auto;color:var(--muted);font-size:13px}
+
+/* mind map */
+.map{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px 16px}
+.root{margin:0 auto 28px;max-width:420px;text-align:center;background:var(--root);color:var(--root-text);
+  border:3px solid #8ec5ff;border-radius:40px;padding:16px}
+.root b{display:block;font-size:20px;font-weight:600}
+.root span{font-family:var(--mono);opacity:.85}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media (max-width:860px){.cols{grid-template-columns:1fr}.hint{margin-left:0}}
+.branch{display:flex;flex-direction:column;gap:12px}
+.bhead{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;
+  border:2px solid var(--accent);border-radius:14px;padding:12px 16px;background:var(--panel2);user-select:none}
+.bhead .t{font-weight:600}
+.bhead .s{display:block;color:var(--accent);font-style:italic;font-size:14px}
+.tog{width:26px;height:26px;border-radius:50%;border:2px solid var(--accent);color:var(--accent);
+  display:grid;place-items:center;font-weight:700;flex:none;line-height:1}
+.kids{display:flex;flex-direction:column;gap:10px;padding-left:12px;border-left:2px dotted var(--accent);margin-left:14px}
+.branch.closed .kids{display:none}
+.node{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer;
+  transition:border-color .15s,transform .15s}
+.node:hover,.node.active{border-color:var(--accent);transform:translateX(2px)}
+.node .t{font-size:15px}
+.node .k{font-family:var(--mono);font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+
+/* detail panel */
+.detail{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--dacc,var(--c1));
+  border-radius:16px;padding:22px 24px;min-height:180px}
+.detail .crumb{color:var(--muted);font-size:13px}
+.detail h2{margin:4px 0 8px;font-size:22px}
+.detail p{margin:8px 0}
+.detail ul{margin:8px 0;padding-left:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:8px;padding:3px 10px;background:var(--panel2)}
+.detail a{color:var(--c1)}
+
+/* sections */
+section{margin-top:40px}
+section h3{font-size:20px;margin:0 0 12px}
+.tl{position:relative;padding-left:22px;border-left:2px solid var(--line)}
+.tl .ev{position:relative;margin-bottom:16px}
+.tl .ev::before{content:"";position:absolute;left:-29px;top:6px;width:12px;height:12px;border-radius:50%;
+  background:var(--c1);border:2px solid var(--bg)}
+.tl .yr{font-family:var(--mono);color:var(--c1);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--panel);border-radius:12px;overflow:hidden}
+th,td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+th{background:var(--panel2);font-weight:600}
+.tablewrap{overflow-x:auto}
+.refs li{margin-bottom:6px;font-size:14px}
+.refs a{color:var(--c1);word-break:break-all}
+.note{color:var(--muted);font-size:13px;margin-top:8px}
+/* open-source map */
+.osgroup{margin-bottom:20px}
+.osgroup h4{margin:0 0 10px;font-size:15px;color:var(--muted);font-weight:600}
+.repos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.repo{display:block;text-decoration:none;color:var(--text);background:var(--panel);border:1px solid var(--line);
+  border-left:4px solid var(--rc,var(--c1));border-radius:12px;padding:12px 14px;transition:border-color .15s,transform .15s}
+.repo:hover{border-color:var(--rc,var(--c1));transform:translateY(-2px)}
+.repo .nm{font-weight:600}
+.repo .path{font-family:var(--mono);font-size:12px;color:var(--rc,var(--c1));overflow-wrap:anywhere}
+.repo .ds{font-size:13px;color:var(--muted);margin-top:4px}
+.repo .tag{display:inline-block;font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:6px;padding:0 6px;margin-top:6px}
+.codelinks{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+.codelinks a{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--text);border:1px solid var(--dacc,var(--c1));
+  border-radius:8px;padding:3px 10px}
+.codelinks a::before{content:"⌥ "}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RAG 최신 연구 동향 (2020~2026)</h1>
+  <p class="sub">발표 시점 · 기술 스택 · 어플리케이션 3축으로 정리한 검색 증강 생성(Retrieval-Augmented Generation) 지식 맵</p>
+
+  <div class="toolbar">
+    <button class="tb" id="openAll">전체 펼치기</button>
+    <button class="tb" id="closeAll">전체 접기</button>
+    <span class="hint">가지 제목 클릭: 펼치기/접기 · 노드 클릭: 아래에 상세 설명</span>
+  </div>
+
+  <div class="map">
+    <div class="root"><b>RAG 최신 연구 동향</b><span>2020 ~ 2026</span></div>
+    <div class="cols" id="cols"></div>
+  </div>
+
+  <div class="detail" id="detail"></div>
+
+  <section>
+    <h3>패러다임 흐름 한눈에 보기</h3>
+    <div class="tl">
+      <div class="ev"><div class="yr">2020</div><b>Retrieve → Read 정립</b> — DPR로 밀집 벡터 검색이 BM25를 대체하고, Lewis 등의 RAG가 "검색기 + 생성기" 결합 구조를 정식화.</div>
+      <div class="ev"><div class="yr">2023</div><b>검색을 모델이 통제</b> — 매번 검색하지 않고, 필요할 때만 검색(FLARE)하거나 반성 토큰으로 검색·비평을 스스로 결정(Self-RAG).</div>
+      <div class="ev"><div class="yr">2024</div><b>구조화 & 교정</b> — 지식 그래프·커뮤니티 요약으로 전역 질의 대응(GraphRAG, LightRAG), 검색 품질을 평가해 교정(CRAG), 증거만 추출(SEER).</div>
+      <div class="ev"><div class="yr">2025~2026</div><b>기억·멀티모달·신뢰성</b> — 지속 학습형 비모수 기억(HippoRAG 2), 문서 이미지를 그대로 검색하는 시각 RAG(ColPali, VisRAG), 의료 등 고신뢰 도메인 특화.</div>
+    </div>
+  </section>
+
+  <section>
+    <h3>대표 기법 비교</h3>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>기법</th><th>연도</th><th>핵심 아이디어</th><th>해결하려는 문제</th></tr></thead>
+      <tbody>
+        <tr><td>DPR</td><td>2020</td><td>질문/문단 이중 인코더 + in-batch negative 학습</td><td>희소 검색(BM25)의 어휘 불일치</td></tr>
+        <tr><td>RAG (Lewis)</td><td>2020</td><td>검색 문서를 잠재변수로 두고 생성기와 end-to-end 학습</td><td>파라메트릭 지식의 한계·갱신 비용</td></tr>
+        <tr><td>FLARE</td><td>2023</td><td>생성 중 저신뢰 토큰이 나오면 예측 문장을 질의로 재검색</td><td>장문 생성에서 단발 검색의 부족</td></tr>
+        <tr><td>Self-RAG</td><td>2023</td><td>Retrieve/IsRel/IsSup/IsUse 반성 토큰으로 검색·자기평가</td><td>불필요한 검색, 근거 없는 생성</td></tr>
+        <tr><td>CRAG</td><td>2024</td><td>경량 평가기로 검색 결과를 Correct/Incorrect/Ambiguous 판정 후 웹 검색·정제</td><td>저품질 검색 결과에 대한 취약성</td></tr>
+        <tr><td>GraphRAG</td><td>2024</td><td>엔티티 그래프 → 커뮤니티 탐지 → 커뮤니티 요약으로 map-reduce 응답</td><td>"전체 말뭉치의 주제는?" 같은 전역 질의</td></tr>
+        <tr><td>LightRAG</td><td>2024</td><td>그래프 + 벡터 결합, low/high-level 이중 검색, 증분 업데이트</td><td>GraphRAG의 높은 인덱싱·갱신 비용</td></tr>
+        <tr><td>HippoRAG / 2</td><td>2024/2025</td><td>해마 색인 이론 모사, 지식 그래프 위 Personalized PageRank</td><td>멀티홉 연상, 지속적 지식 축적</td></tr>
+        <tr><td>SEER</td><td>2024</td><td>자기정렬 학습으로 충실성·유용성·간결성을 갖춘 증거 추출</td><td>긴 검색 문맥의 노이즈와 비용</td></tr>
+        <tr><td>ColPali / VisRAG</td><td>2024</td><td>OCR 없이 문서 페이지 이미지를 VLM 임베딩으로 직접 검색</td><td>표·도면·스캔 문서 파싱 손실</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h3>오픈소스 구현 맵</h3>
+    <p class="note" style="margin:0 0 14px">논문 저자가 공개한 공식 구현과, 실제 서비스 구축에 쓰이는 프레임워크를 나눠 정리했습니다. 카드를 누르면 GitHub 저장소로 이동합니다.</p>
+
+    <div class="osgroup">
+      <h4>① 발표 시점 축 — 논문 공식 구현</h4>
+      <div class="repos" style="--rc:var(--c1)">
+        <a class="repo" href="https://github.com/facebookresearch/DPR" target="_blank" rel="noopener"><div class="nm">DPR</div><div class="path">facebookresearch/DPR</div><div class="ds">dual-encoder 학습·인덱싱·검색 파이프라인</div><span class="tag">2020 · 공식</span></a>
+        <a class="repo" href="https://github.com/huggingface/transformers/tree/main/src/transformers/models/rag" target="_blank" rel="noopener"><div class="nm">RAG (Lewis)</div><div class="path">huggingface/transformers · models/rag</div><div class="ds">RAG-Sequence / RAG-Token 모델 구현</div><span class="tag">2020 · 공식 포팅</span></a>
+        <a class="repo" href="https://github.com/jzbjyb/FLARE" target="_blank" rel="noopener"><div class="nm">FLARE</div><div class="path">jzbjyb/FLARE</div><div class="ds">저신뢰 토큰 기반 능동 재검색</div><span class="tag">2023 · 공식</span></a>
+        <a class="repo" href="https://github.com/AkariAsai/self-rag" target="_blank" rel="noopener"><div class="nm">Self-RAG</div><div class="path">AkariAsai/self-rag</div><div class="ds">반성 토큰 학습 코드 + 7B/13B 가중치</div><span class="tag">2023 · 공식</span></a>
+        <a class="repo" href="https://github.com/microsoft/graphrag" target="_blank" rel="noopener"><div class="nm">GraphRAG</div><div class="path">microsoft/graphrag</div><div class="ds">엔티티 추출 → 커뮤니티 요약 → global/local search</div><span class="tag">2024 · 공식</span></a>
+        <a class="repo" href="https://github.com/HKUDS/LightRAG" target="_blank" rel="noopener"><div class="nm">LightRAG</div><div class="path">HKUDS/LightRAG</div><div class="ds">dual-level 검색, 증분 인덱싱, Web UI·API 서버</div><span class="tag">2024 · 공식</span></a>
+        <a class="repo" href="https://github.com/HuskyInSalt/CRAG" target="_blank" rel="noopener"><div class="nm">CRAG</div><div class="path">HuskyInSalt/CRAG</div><div class="ds">검색 평가기 학습·가중치, CRAG/Self-CRAG 추론</div><span class="tag">2024 · 공식</span></a>
+        <a class="repo" href="https://github.com/OSU-NLP-Group/HippoRAG" target="_blank" rel="noopener"><div class="nm">HippoRAG / HippoRAG 2</div><div class="path">OSU-NLP-Group/HippoRAG</div><div class="ds">OpenIE 그래프 + Personalized PageRank 검색</div><span class="tag">2024–25 · 공식</span></a>
+      </div>
+    </div>
+
+    <div class="osgroup">
+      <h4>② 기술 스택 · 어플리케이션 축 — 논문 공식 구현</h4>
+      <div class="repos" style="--rc:var(--c2)">
+        <a class="repo" href="https://github.com/HITsz-TMG/SEER" target="_blank" rel="noopener"><div class="nm">SEER</div><div class="path">HITsz-TMG/SEER</div><div class="ds">자기정렬 증거 추출기 학습</div><span class="tag">재정렬·필터링</span></a>
+        <a class="repo" style="--rc:var(--c3)" href="https://github.com/ImprintLab/Medical-Graph-RAG" target="_blank" rel="noopener"><div class="nm">MedGraphRAG</div><div class="path">ImprintLab/Medical-Graph-RAG</div><div class="ds">3계층 의료 그래프 구축, U-Retrieval</div><span class="tag">의료 · ACL 2025</span></a>
+        <a class="repo" style="--rc:var(--c3)" href="https://github.com/illuin-tech/colpali" target="_blank" rel="noopener"><div class="nm">ColPali</div><div class="path">illuin-tech/colpali</div><div class="ds">페이지 이미지 late-interaction 검색 학습·추론</div><span class="tag">비전 문서</span></a>
+        <a class="repo" style="--rc:var(--c3)" href="https://github.com/OpenBMB/VisRAG" target="_blank" rel="noopener"><div class="nm">VisRAG</div><div class="path">OpenBMB/VisRAG</div><div class="ds">VLM 기반 검색기·생성기 파이프라인</div><span class="tag">비전 문서</span></a>
+      </div>
+    </div>
+
+    <div class="osgroup">
+      <h4>③ 실서비스 구축용 프레임워크 · 연구 툴킷</h4>
+      <div class="repos" style="--rc:var(--muted)">
+        <a class="repo" href="https://github.com/RUC-NLPIR/FlashRAG" target="_blank" rel="noopener"><div class="nm">FlashRAG</div><div class="path">RUC-NLPIR/FlashRAG</div><div class="ds">Self-RAG·FLARE 등 다수 기법을 동일 조건에서 재현·비교</div><span class="tag">연구 툴킷</span></a>
+        <a class="repo" href="https://github.com/run-llama/llama_index" target="_blank" rel="noopener"><div class="nm">LlamaIndex</div><div class="path">run-llama/llama_index</div><div class="ds">인덱싱·검색·Property Graph 인덱스</div><span class="tag">프레임워크</span></a>
+        <a class="repo" href="https://github.com/langchain-ai/langchain" target="_blank" rel="noopener"><div class="nm">LangChain / LangGraph</div><div class="path">langchain-ai/langchain</div><div class="ds">검색 체인, CRAG·Self-RAG식 분기 그래프 구성</div><span class="tag">프레임워크</span></a>
+        <a class="repo" href="https://github.com/deepset-ai/haystack" target="_blank" rel="noopener"><div class="nm">Haystack</div><div class="path">deepset-ai/haystack</div><div class="ds">파이프라인 기반 프로덕션 RAG</div><span class="tag">프레임워크</span></a>
+        <a class="repo" href="https://github.com/infiniflow/ragflow" target="_blank" rel="noopener"><div class="nm">RAGFlow</div><div class="path">infiniflow/ragflow</div><div class="ds">표·스캔 문서 딥 파싱 중심 RAG 엔진</div><span class="tag">엔진 · 셀프호스팅</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3>참고 문헌 (원 논문)</h3>
+    <ol class="refs">
+      <li>Karpukhin et al., <i>Dense Passage Retrieval for Open-Domain QA</i>, EMNLP 2020 — <a href="https://arxiv.org/abs/2004.04906">arXiv:2004.04906</a></li>
+      <li>Lewis et al., <i>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</i>, NeurIPS 2020 — <a href="https://arxiv.org/abs/2005.11401">arXiv:2005.11401</a></li>
+      <li>Jiang et al., <i>Active Retrieval Augmented Generation (FLARE)</i>, EMNLP 2023 — <a href="https://arxiv.org/abs/2305.06983">arXiv:2305.06983</a></li>
+      <li>Asai et al., <i>Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection</i>, ICLR 2024 — <a href="https://arxiv.org/abs/2310.11511">arXiv:2310.11511</a></li>
+      <li>Gao et al., <i>Retrieval-Augmented Generation for LLMs: A Survey</i>, 2023 — <a href="https://arxiv.org/abs/2312.10997">arXiv:2312.10997</a></li>
+      <li>Yan et al., <i>Corrective Retrieval Augmented Generation (CRAG)</i>, 2024 — <a href="https://arxiv.org/abs/2401.15884">arXiv:2401.15884</a></li>
+      <li>Edge et al., <i>From Local to Global: A Graph RAG Approach to Query-Focused Summarization</i>, 2024 — <a href="https://arxiv.org/abs/2404.16130">arXiv:2404.16130</a></li>
+      <li>Gutiérrez et al., <i>HippoRAG: Neurobiologically Inspired Long-Term Memory for LLMs</i>, NeurIPS 2024 — <a href="https://arxiv.org/abs/2405.14831">arXiv:2405.14831</a></li>
+      <li>Faysse et al., <i>ColPali: Efficient Document Retrieval with Vision Language Models</i>, 2024 — <a href="https://arxiv.org/abs/2407.01449">arXiv:2407.01449</a></li>
+      <li>Wu et al., <i>Medical Graph RAG (MedGraphRAG)</i>, 2024 — <a href="https://arxiv.org/abs/2408.04187">arXiv:2408.04187</a></li>
+      <li>Guo et al., <i>LightRAG: Simple and Fast Retrieval-Augmented Generation</i>, 2024 — <a href="https://arxiv.org/abs/2410.05779">arXiv:2410.05779</a></li>
+      <li>Yu et al., <i>VisRAG: Vision-based RAG on Multi-modality Documents</i>, 2024 — <a href="https://arxiv.org/abs/2410.10594">arXiv:2410.10594</a></li>
+      <li>Zhao et al., <i>SEER: Self-Aligned Evidence Extraction for RAG</i>, EMNLP 2024 — <a href="https://arxiv.org/abs/2410.11315">arXiv:2410.11315</a></li>
+      <li>Gutiérrez et al., <i>From RAG to Memory: Non-Parametric Continual Learning for LLMs (HippoRAG 2)</i>, 2025 — <a href="https://arxiv.org/abs/2502.14802">arXiv:2502.14802</a></li>
+    </ol>
+    <p class="note">"Confidence-Calibrated RAG"와 "Multimodal RAG"는 단일 논문이 아니라 연구 흐름을 묶은 이름이라, 해당 노드는 대표 기법으로 설명했습니다.</p>
+  </section>
+</div>
+
+<script>
+const DATA = [
+  { id:"tl", title:"발표 시점 (Timeline)", sub:"2020~2026 발전사", accent:"var(--c1)", nodes:[
+    { t:"2020~2022 (초기 정립)", k:"Naive RAG, DPR",
+      d:`<p>질의를 임베딩해 상위 k개 문단을 찾고, 그대로 프롬프트에 붙여 생성하는 <b>Retrieve-then-Read</b> 구조가 정립된 시기입니다.</p>
+         <ul><li><b>DPR</b>: 질문·문단을 각각 BERT로 인코딩하는 dual-encoder. in-batch negative로 학습해 오픈도메인 QA에서 BM25를 크게 앞섬.</li>
+         <li><b>RAG (Lewis et al.)</b>: 검색 문서를 잠재변수로 보고 RAG-Sequence / RAG-Token 두 방식으로 생성기와 함께 학습.</li>
+         <li>한계: 검색이 틀려도 그대로 생성, 청크 경계 문제, 다중 홉 추론 취약.</li></ul>`,
+      refs:["DPR (2004.04906)","RAG (2005.11401)"],
+      code:[{"n": "facebookresearch/DPR", "u": "https://github.com/facebookresearch/DPR"}, {"n": "transformers/rag", "u": "https://github.com/huggingface/transformers/tree/main/src/transformers/models/rag"}] },
+    { t:"2023 (구조화 & 통제)", k:"Self-RAG, FLARE",
+      d:`<p>"언제, 무엇을 검색할지"를 모델이 스스로 결정하도록 만든 시기입니다.</p>
+         <ul><li><b>FLARE</b>: 다음 문장을 미리 생성해 보고 확률이 낮은 토큰이 있으면 그 문장을 질의로 재검색 — 장문 생성에서 능동적 검색.</li>
+         <li><b>Self-RAG</b>: Retrieve, IsREL, IsSUP, IsUSE 같은 반성(reflection) 토큰을 학습시켜 검색 필요성 판단과 출력 자기평가를 한 모델에서 수행.</li></ul>`,
+      refs:["FLARE (2305.06983)","Self-RAG (2310.11511)"],
+      code:[{"n": "jzbjyb/FLARE", "u": "https://github.com/jzbjyb/FLARE"}, {"n": "AkariAsai/self-rag", "u": "https://github.com/AkariAsai/self-rag"}] },
+    { t:"2024 (그래프 & 검색 보완)", k:"GraphRAG, LightRAG, CRAG",
+      d:`<p>평면 벡터 검색의 한계를 <b>지식 그래프</b>와 <b>검색 결과 교정</b>으로 보완한 해입니다.</p>
+         <ul><li><b>GraphRAG</b> (Microsoft): LLM으로 엔티티·관계 추출 → Leiden 커뮤니티 탐지 → 계층별 커뮤니티 요약 → map-reduce로 전역 질의 응답.</li>
+         <li><b>LightRAG</b>: 그래프와 벡터 인덱스를 결합하고 low-level(엔티티)/high-level(주제) 이중 검색, 증분 업데이트로 비용 절감.</li>
+         <li><b>CRAG</b>: 검색 평가기가 결과를 판정해 정제(decompose-recompose)하거나 웹 검색으로 보충.</li></ul>`,
+      refs:["GraphRAG (2404.16130)","LightRAG (2410.05779)","CRAG (2401.15884)"],
+      code:[{"n": "microsoft/graphrag", "u": "https://github.com/microsoft/graphrag"}, {"n": "HKUDS/LightRAG", "u": "https://github.com/HKUDS/LightRAG"}, {"n": "HuskyInSalt/CRAG", "u": "https://github.com/HuskyInSalt/CRAG"}] },
+    { t:"2025~2026 (지식 최적화)", k:"HippoRAG 2, Multimodal RAG",
+      d:`<p>RAG를 단순 검색이 아닌 <b>LLM의 장기 기억</b>으로 보는 관점과, 텍스트 밖의 데이터를 다루는 멀티모달 확장이 중심입니다.</p>
+         <ul><li><b>HippoRAG 2</b>: 문단 노드를 그래프에 통합하고 질의-트리플 매칭과 인식(recognition) 필터를 더해, 사실 기억·연상·의미 이해를 모두 개선한 비모수 지속 학습.</li>
+         <li><b>Multimodal RAG</b>: 문서 페이지 이미지·표·도면을 VLM 임베딩으로 직접 검색하고 생성 (ColPali, VisRAG 계열).</li></ul>`,
+      refs:["HippoRAG 2 (2502.14802)","VisRAG (2410.10594)"],
+      code:[{"n": "OSU-NLP-Group/HippoRAG", "u": "https://github.com/OSU-NLP-Group/HippoRAG"}, {"n": "OpenBMB/VisRAG", "u": "https://github.com/OpenBMB/VisRAG"}] }
+  ]},
+  { id:"ts", title:"기술 스택 (Tech Stack)", sub:"핵심 메커니즘", accent:"var(--c2)", nodes:[
+    { t:"오프라인 인덱싱", k:"Entity/Triple & Community",
+      d:`<p>질의 시점 이전에 말뭉치를 구조화하는 단계입니다.</p>
+         <ul><li>LLM 기반 OpenIE로 (주어, 관계, 목적어) <b>트리플</b> 추출 → 엔티티 정규화·동의어 엣지 연결.</li>
+         <li>그래프에 커뮤니티 탐지(Leiden 등)를 적용하고, 커뮤니티마다 요약문을 미리 생성 (GraphRAG).</li>
+         <li>트레이드오프: 인덱싱 시 LLM 호출이 많아 비용이 크고, 문서 추가 시 재구축 부담 → LightRAG의 증분 갱신이 대응책.</li></ul>`,
+      refs:["GraphRAG","LightRAG","HippoRAG"],
+      code:[{"n": "microsoft/graphrag", "u": "https://github.com/microsoft/graphrag"}, {"n": "HKUDS/LightRAG", "u": "https://github.com/HKUDS/LightRAG"}, {"n": "OSU-NLP-Group/HippoRAG", "u": "https://github.com/OSU-NLP-Group/HippoRAG"}] },
+    { t:"검색 엔진 (Retrieval)", k:"Dual-level & PageRank",
+      d:`<ul><li><b>Dual-level (LightRAG)</b>: 질의에서 구체 키워드(엔티티)와 추상 키워드(주제)를 따로 뽑아 각각 엔티티·관계 인덱스를 검색 후 결합.</li>
+         <li><b>Personalized PageRank (HippoRAG)</b>: 질의 엔티티를 시드 노드로 두고 그래프 위에서 확률 질량을 퍼뜨려, 한 번의 검색으로 멀티홉 연관 문단을 찾음.</li>
+         <li>실무에선 BM25 + 밀집 벡터 하이브리드 위에 이 계층을 얹는 구성이 일반적.</li></ul>`,
+      refs:["LightRAG (2410.05779)","HippoRAG (2405.14831)"],
+      code:[{"n": "HKUDS/LightRAG", "u": "https://github.com/HKUDS/LightRAG"}, {"n": "OSU-NLP-Group/HippoRAG", "u": "https://github.com/OSU-NLP-Group/HippoRAG"}] },
+    { t:"재정렬 & 필터링", k:"SEER & CRAG Evaluator",
+      d:`<p>검색된 문서를 그대로 쓰지 않고 걸러내는 후처리 단계입니다.</p>
+         <ul><li><b>CRAG Evaluator</b>: 경량 T5 기반 평가기가 검색 신뢰도를 매겨 Correct/Incorrect/Ambiguous로 분기.</li>
+         <li><b>SEER</b>: 기본 모델을 증거 추출기로 자기정렬 학습시켜 충실성·유용성·간결성을 동시에 최적화. 논문 보고 기준 평균 증거 길이를 약 9.25배 줄이면서 QA 정확도 향상.</li></ul>`,
+      refs:["SEER (2410.11315)","CRAG (2401.15884)"],
+      code:[{"n": "HITsz-TMG/SEER", "u": "https://github.com/HITsz-TMG/SEER"}, {"n": "HuskyInSalt/CRAG", "u": "https://github.com/HuskyInSalt/CRAG"}] }
+  ]},
+  { id:"ap", title:"어플리케이션 (Apps)", sub:"도메인 실무 적용", accent:"var(--c3)", nodes:[
+    { t:"의료/생명과학 (Healthcare)", k:"MedGraphRAG",
+      d:`<p>오답의 비용이 큰 영역이라 <b>근거 추적성</b>이 핵심입니다.</p>
+         <ul><li><b>MedGraphRAG</b>: 사용자 문서 → 의학 논문·교과서 → 의학 용어 사전으로 이어지는 3계층 그래프를 연결(Triple Graph Construction)하고, U-Retrieval로 상위 태그→하위 엔티티 순으로 검색.</li>
+         <li>응답마다 출처 문헌과 용어 정의를 함께 제시해 검증 가능성을 높임.</li></ul>`,
+      refs:["MedGraphRAG (2408.04187)"],
+      code:[{"n": "ImprintLab/Medical-Graph-RAG", "u": "https://github.com/ImprintLab/Medical-Graph-RAG"}] },
+    { t:"고신뢰성 기업 환경", k:"Confidence-Calibrated RAG",
+      d:`<p>"모르면 모른다고 답하는" RAG입니다. 단일 논문이 아니라 연구 흐름을 묶은 이름입니다.</p>
+         <ul><li>검색 신뢰도 점수(CRAG 평가기), 근거 지지 여부(Self-RAG IsSUP), 생성 토큰 확률(FLARE) 등을 신호로 사용.</li>
+         <li>임계값 미만이면 답변 보류·사람 검토로 넘기는 <b>abstention</b> 설계, 출처 인용 강제.</li>
+         <li>사내 규정·품질 문서처럼 오답이 감사 이슈가 되는 환경에서 특히 중요.</li></ul>`,
+      refs:["Self-RAG","CRAG","FLARE"],
+      code:[{"n": "AkariAsai/self-rag", "u": "https://github.com/AkariAsai/self-rag"}, {"n": "HuskyInSalt/CRAG", "u": "https://github.com/HuskyInSalt/CRAG"}, {"n": "jzbjyb/FLARE", "u": "https://github.com/jzbjyb/FLARE"}] },
+    { t:"산업/비전 데이터", k:"Vision-Language RAG Parsing",
+      d:`<p>장비 매뉴얼, 도면, 스캔된 사양서처럼 텍스트 추출이 어려운 문서를 다룹니다.</p>
+         <ul><li><b>ColPali</b>: OCR·레이아웃 파싱 없이 페이지 이미지를 VLM 패치 임베딩으로 만들고 late-interaction(ColBERT식)으로 검색.</li>
+         <li><b>VisRAG</b>: 검색과 생성 모두 이미지 단위로 처리해 파싱 과정의 정보 손실을 회피.</li>
+         <li>표·다이어그램이 많은 기술 문서 QA에서 텍스트 파이프라인 대비 강점.</li></ul>`,
+      refs:["ColPali (2407.01449)","VisRAG (2410.10594)"],
+      code:[{"n": "illuin-tech/colpali", "u": "https://github.com/illuin-tech/colpali"}, {"n": "OpenBMB/VisRAG", "u": "https://github.com/OpenBMB/VisRAG"}, {"n": "infiniflow/ragflow", "u": "https://github.com/infiniflow/ragflow"}] }
+  ]}
+];
+
+const cols = document.getElementById("cols");
+const detail = document.getElementById("detail");
+
+function showRoot(){
+  detail.style.setProperty("--dacc","var(--c1)");
+  detail.innerHTML = `<div class="crumb">통합 조망</div><h2>RAG 최신 연구 동향 (2020 ~ 2026)</h2>
+    <p>RAG 연구는 <b>"검색해서 붙인다"</b>(2020) → <b>"언제 검색할지 모델이 판단한다"</b>(2023) → <b>"지식을 구조화하고 검색 결과를 교정한다"</b>(2024) → <b>"기억으로서의 RAG, 멀티모달·고신뢰 도메인"</b>(2025~)으로 진화해 왔습니다.</p>
+    <p>위 노드를 클릭하면 각 기법의 메커니즘, 원 논문, 공식 구현 저장소 링크를 볼 수 있습니다.</p>
+    <div class="chips"><span class="chip">3 Major Branches</span><span class="chip">10 Sub-topics</span><span class="chip">14 References</span><span class="chip">17 Repos</span></div>`;
+}
+
+DATA.forEach(b=>{
+  const br = document.createElement("div");
+  br.className = "branch";
+  br.style.setProperty("--accent", b.accent);
+  br.innerHTML = `<div class="bhead"><div><span class="t">${b.title}</span><span class="s">${b.sub}</span></div><span class="tog">−</span></div><div class="kids"></div>`;
+  const head = br.querySelector(".bhead"), kids = br.querySelector(".kids"), tog = br.querySelector(".tog");
+  head.addEventListener("click",()=>{ br.classList.toggle("closed"); tog.textContent = br.classList.contains("closed") ? "+" : "−"; });
+  b.nodes.forEach(n=>{
+    const el = document.createElement("div");
+    el.className = "node";
+    el.innerHTML = `<div class="t">${n.t}</div><div class="k">${n.k}</div>`;
+    el.addEventListener("click",()=>{
+      document.querySelectorAll(".node.active").forEach(x=>x.classList.remove("active"));
+      el.classList.add("active");
+      detail.style.setProperty("--dacc", b.accent);
+      detail.innerHTML = `<div class="crumb">${b.title} › ${n.t}</div><h2>${n.k}</h2>${n.d}
+        <div class="chips">${n.refs.map(r=>`<span class="chip">${r}</span>`).join("")}</div>
+        ${n.code?`<div class="codelinks">${n.code.map(c=>`<a href="${c.u}" target="_blank" rel="noopener">${c.n}</a>`).join("")}</div>`:""}`;
+      if (window.innerWidth < 860) detail.scrollIntoView({behavior:"smooth", block:"start"});
+    });
+    kids.appendChild(el);
+  });
+  cols.appendChild(br);
+});
+
+function setAll(open){
+  document.querySelectorAll(".branch").forEach(br=>{
+    br.classList.toggle("closed", !open);
+    br.querySelector(".tog").textContent = open ? "−" : "+";
+  });
+}
+document.getElementById("openAll").onclick = ()=>setAll(true);
+document.getElementById("closeAll").onclick = ()=>setAll(false);
+document.querySelector(".root").addEventListener("click", showRoot);
+document.querySelector(".root").style.cursor = "pointer";
+showRoot();
+</script>
+</body>
+</html>
