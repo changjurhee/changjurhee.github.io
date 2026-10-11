@@ -120,6 +120,24 @@
       body.globe-ready .xy{ font-size:13px; }
     }
 
+
+    /* image credit (NASA requires attribution for Blue Marble imagery) */
+    .credit{
+      position:fixed;
+      right:clamp(14px, 2.4vw, 28px);
+      bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+      z-index:3;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:11px;
+      letter-spacing:.04em;
+      color:rgba(230,226,255,.38);
+    }
+    .credit a{ color:inherit; text-decoration:none; border-bottom:1px solid rgba(230,226,255,.18); }
+    .credit a:hover, .credit a:focus-visible{ color:var(--ink-dim); outline:none; }
+    @media (max-width: 720px){
+      body.globe-ready .credit{ position:static; display:block; width:100%; text-align:center; margin-top:4px; }
+    }
+
     @media (prefers-reduced-motion: reduce){
       .xy{ animation:none; }
       #globe, .coords, .xy{ transition:none; }
@@ -148,8 +166,9 @@
     <div class="xy" data-raw="40.11380, -88.22491">40.11380, -88.22491</div>
   </a>
   <a href="physical-ai-limits-map.html" aria-label="피지컬 AI 한 연구 지도 페이지로 이동">
-    <div class="xy" data-raw="37.3708, -121.9639">37.3708, -121.9639</div>
+    <div class="xy" data-raw="37.3708, 121.9639">37.3708, 121.9639</div>
   </a>
+  <small class="credit">Imagery: <a href="https://earthobservatory.nasa.gov/" target="_blank" rel="noopener">NASA Earth Observatory</a> Blue Marble · Globe: <a href="https://worldwind.arc.nasa.gov/" target="_blank" rel="noopener">NASA WorldWind</a></small>
 </main>
 
 <script>
@@ -271,7 +290,7 @@ const EARTH_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgEASABIAAD/7Q0EUGhvdG
 
   // ---------- one pin per coordinate link (data comes straight from the existing markup) ----------
   const pinLayer = new WorldWind.RenderableLayer("pins");
-  const links = Array.from(document.querySelectorAll(".coords a"));
+  const links = Array.from(document.querySelectorAll(".coords .xy[data-raw]")).map(el => el.closest("a"));  // coordinate links only (not the credit links)
   const pins = links.map(a => {
     const raw = a.querySelector(".xy").getAttribute("data-raw");
     const [lat, lon] = raw.split(",").map(s => parseFloat(s.trim()));
