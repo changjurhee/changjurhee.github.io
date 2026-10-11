@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Physical AI 한계 연구 지도 — 반도체 제조 관점</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --c-ready:        #2a78d6;
+    --c-exec:         #eb6834;
+    --c-assure:       #1baf7a;
+    --c-data:         #eda100;
+    --c-semi:         #e87ba4;
+    --scrim:          rgba(11,11,11,0.45);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --c-ready:        #3987e5;
+      --c-exec:         #d95926;
+      --c-assure:       #199e70;
+      --c-data:         #c98500;
+      --c-semi:         #d55181;
+      --scrim:          rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --c-ready:        #3987e5;
+    --c-exec:         #d95926;
+    --c-assure:       #199e70;
+    --c-data:         #c98500;
+    --c-semi:         #d55181;
+    --scrim:          rgba(0,0,0,0.6);
+  }
+  * { box-sizing: border-box; }
+  :root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; background: var(--page); color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1260px; margin: 0 auto; padding: 32px 20px 64px; }
+  header h1 { font-size: 1.55rem; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header p.sub { margin: 0; color: var(--text-secondary); font-size: 0.95rem; max-width: 80ch; }
+  header p.hint { margin: 6px 0 0; color: var(--text-muted); font-size: 0.85rem; }
+
+  .thesis {
+    margin-top: 18px; border-left: 3px solid var(--text-primary);
+    padding: 4px 0 4px 14px; max-width: 82ch; font-size: 0.93rem; color: var(--text-secondary);
+  }
+  .thesis b { color: var(--text-primary); }
+
+  .tabs { display: flex; gap: 6px; margin-top: 22px; border-bottom: 1px solid var(--grid); overflow-x: auto; }
+  .tab-btn {
+    background: none; border: none; border-bottom: 3px solid transparent;
+    font: inherit; font-weight: 600; font-size: 0.95rem; color: var(--text-secondary);
+    padding: 10px 16px 8px; cursor: pointer; white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn[aria-selected="true"] { color: var(--text-primary); border-bottom-color: var(--text-primary); }
+  .tab-btn:focus-visible, .tl-item:focus-visible, .paper-row:focus-visible, .chip-btn:focus-visible, .close-btn:focus-visible {
+    outline: 2px solid var(--text-primary); outline-offset: 2px;
+  }
+  .panel { display: none; margin-top: 16px; }
+  .panel.active { display: block; }
+
+  .board { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 8px; }
+  .scroll-x { overflow-x: auto; }
+  svg.big { width: 100%; height: auto; display: block; min-width: 760px; }
+  svg text { font-family: inherit; }
+  svg .t-title { font-size: 14.5px; font-weight: 650; fill: var(--text-primary); }
+  svg .t-sub   { font-size: 11.5px; fill: var(--text-secondary); }
+  svg .t-meta  { font-size: 11px; fill: var(--text-muted); }
+  svg .t-branch{ font-size: 14px; font-weight: 700; fill: var(--text-primary); }
+  svg .t-center{ font-size: 19px; font-weight: 750; fill: var(--text-primary); }
+  svg .t-center-sub{ font-size: 12px; fill: var(--text-secondary); }
+  svg g.paper, svg g.gnode { cursor: pointer; }
+  svg g.paper:hover rect, svg g.paper:focus-visible rect { stroke-width: 3; }
+  svg g.paper:focus-visible, svg g.gnode:focus-visible { outline: none; }
+  svg g.gnode:hover circle.core, svg g.gnode:focus-visible circle.core { stroke-width: 4; }
+
+  .legend-row { display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 14px 4px; font-size: 0.82rem; color: var(--text-secondary); align-items: center; }
+  .legend-row .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .legend-row .ln { display: inline-block; width: 26px; height: 0; border-top: 2px solid var(--text-muted); margin-right: 6px; vertical-align: 3px; }
+  .legend-row .ln.dash { border-top-style: dashed; }
+
+  .timeline { position: relative; padding: 10px 0 10px 30px; margin: 8px 12px; }
+  .timeline::before { content: ""; position: absolute; left: 9px; top: 0; bottom: 0; width: 2px; background: var(--grid); }
+  .tl-year { position: relative; margin: 22px 0 10px; font-size: 1.02rem; font-weight: 750; }
+  .tl-year::before { content: ""; position: absolute; left: -27px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); }
+  .tl-item { position: relative; display: flex; gap: 12px; align-items: baseline; background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 8px 0; cursor: pointer; width: 100%; text-align: left; font: inherit; color: inherit; flex-wrap: wrap; }
+  .tl-item:hover { border-color: var(--text-muted); }
+  .tl-item::before { content: ""; position: absolute; left: -25px; top: 16px; width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--text-muted)); }
+  .tl-item .m { color: var(--text-muted); font-size: 0.8rem; min-width: 34px; }
+  .tl-item .t { font-weight: 640; font-size: 0.92rem; }
+  .tl-item .d { color: var(--text-secondary); font-size: 0.84rem; }
+  .tl-item .v { margin-left: auto; color: var(--text-muted); font-size: 0.78rem; white-space: nowrap; }
+
+  section.list { margin-top: 30px; }
+  section.list h2 { font-size: 1.05rem; margin: 0 0 10px; }
+  .paper-row { display: flex; align-items: baseline; gap: 12px; width: 100%; text-align: left; background: var(--surface-1); border: 1px solid var(--border); border-left: 4px solid var(--bc, var(--baseline)); border-radius: 10px; padding: 11px 16px; margin-bottom: 8px; cursor: pointer; color: inherit; font: inherit; flex-wrap: wrap; }
+  .paper-row:hover { border-color: var(--text-muted); border-left-color: var(--bc, var(--baseline)); }
+  .paper-row .rt { font-weight: 640; font-size: 0.93rem; flex: 1 1 420px; }
+  .paper-row .rm { color: var(--text-muted); font-size: 0.8rem; margin-left: auto; white-space: nowrap; }
+
+  /* matrix */
+  .mx-intro { color: var(--text-secondary); font-size: 0.92rem; margin: 6px 6px 14px; max-width: 80ch; }
+  table.mx { width: 100%; border-collapse: collapse; font-size: 0.87rem; min-width: 820px; }
+  table.mx th { text-align: left; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--baseline); }
+  table.mx td { padding: 11px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; color: var(--text-secondary); }
+  table.mx td.bn { color: var(--text-primary); font-weight: 700; width: 17%; }
+  table.mx td.bn span { display: block; font-weight: 400; font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+  table.mx td.ev { width: 43%; }
+  .ev-item { margin-bottom: 7px; }
+  .ev-item:last-child { margin-bottom: 0; }
+  .chip-btn {
+    display: inline-block; border: 1px solid var(--tc, var(--grid)); border-radius: 999px;
+    background: color-mix(in srgb, var(--tc, var(--grid)) 10%, var(--surface-1));
+    padding: 1.5px 9px; margin-right: 6px; font: inherit; font-size: 0.78rem; font-weight: 650;
+    color: var(--text-primary); cursor: pointer; white-space: nowrap;
+  }
+  .pattern-box { margin-top: 18px; border: 1px dashed var(--baseline); border-radius: 12px; padding: 13px 16px; font-size: 0.9rem; color: var(--text-secondary); }
+  .pattern-box b { color: var(--text-primary); }
+
+  /* modal */
+  .overlay { position: fixed; inset: 0; background: var(--scrim); display: none; align-items: flex-start; justify-content: center; padding: calc(4vh + env(safe-area-inset-top, 0px)) 16px calc(4vh + env(safe-area-inset-bottom, 0px)); z-index: 50; overflow-y: auto; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--surface-1); border: 1px solid var(--border); border-radius: 16px; max-width: 820px; width: 100%; box-shadow: 0 24px 64px rgba(0,0,0,0.28); }
+  .modal-head { padding: 22px 26px 16px; border-bottom: 1px solid var(--grid); position: relative; }
+  .modal-head .tag { display: inline-flex; align-items: center; gap: 7px; font-size: 0.8rem; font-weight: 650; color: var(--text-secondary); margin-bottom: 8px; }
+  .modal-head .tag .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .modal-head h2 { margin: 0 0 6px; font-size: 1.22rem; line-height: 1.35; letter-spacing: -0.01em; padding-right: 40px; }
+  .modal-head .meta { color: var(--text-muted); font-size: 0.85rem; }
+  .modal-head .links { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .modal-head .links a { display: inline-block; text-decoration: none; font-size: 0.84rem; font-weight: 600; color: var(--text-primary); border: 1.5px solid var(--baseline); border-radius: 8px; padding: 6px 12px; }
+  .modal-head .links a:hover { border-color: var(--text-primary); }
+  .close-btn { position: absolute; top: 16px; right: 16px; background: none; border: 1px solid var(--border); border-radius: 8px; width: 34px; height: 34px; font-size: 1rem; line-height: 1; color: var(--text-secondary); cursor: pointer; }
+  .close-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+  .modal-body { padding: 20px 26px 28px; }
+  .modal-body h3 { font-size: 0.86rem; letter-spacing: 0.01em; color: var(--text-muted); margin: 22px 0 8px; font-weight: 700; }
+  .modal-body h3:first-child { margin-top: 0; }
+  .modal-body p { margin: 0 0 10px; font-size: 0.95rem; }
+  .modal-body p.results { color: var(--text-secondary); }
+  .metric-box { border: 1px solid var(--grid); border-radius: 10px; padding: 12px 16px; font-size: 0.9rem; color: var(--text-secondary); }
+  .metric-box b { color: var(--text-primary); }
+  .limit-box { border-left: 4px solid var(--lc, var(--text-primary)); background: color-mix(in srgb, var(--lc, var(--text-primary)) 7%, var(--surface-1)); border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 0.93rem; }
+  .diagram-holder { margin: 12px 0 4px; overflow-x: auto; }
+  .diagram-holder svg { width: 100%; height: auto; display: block; min-width: 520px; }
+  .diag-caption { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+
+  footer.src { margin-top: 36px; color: var(--text-muted); font-size: 0.8rem; max-width: 100ch; }
+
+
+  /* terms & market tabs */
+  h3.sec { font-size: 1.02rem; margin: 26px 4px 10px; }
+  h3.sec:first-child { margin-top: 4px; }
+  .def-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+  .def-card { border: 1px solid var(--border); border-top: 3px solid var(--tc, var(--baseline)); border-radius: 12px; padding: 14px 16px; background: var(--surface-1); }
+  .def-card .yr { color: var(--text-muted); font-size: 0.82rem; font-weight: 650; }
+  .def-card h4 { margin: 2px 0 8px; font-size: 1.02rem; }
+  .def-card p { margin: 0 0 8px; font-size: 0.9rem; color: var(--text-secondary); }
+  .def-card .lk { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .def-card .lk a, .src-a { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); text-decoration: none; border: 1px solid var(--baseline); border-radius: 7px; padding: 3px 9px; white-space: nowrap; }
+  .def-card .lk a:hover, .src-a:hover { border-color: var(--text-primary); }
+  .mini-tl { margin: 0 4px; }
+  .mini-tl .row { display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--grid); font-size: 0.9rem; }
+  .mini-tl .row:last-child { border-bottom: none; }
+  .mini-tl .dt { color: var(--text-muted); font-weight: 650; font-size: 0.84rem; }
+  .mini-tl .tx { color: var(--text-secondary); }
+  .mini-tl .tx b { color: var(--text-primary); }
+  .mini-tl .tx a { color: var(--text-primary); text-underline-offset: 2px; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-width: 760px; }
+  table.tbl th { text-align: left; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--baseline); }
+  table.tbl td { padding: 9px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; color: var(--text-secondary); }
+  table.tbl td:first-child { color: var(--text-primary); font-weight: 650; }
+  table.tbl td.num { white-space: nowrap; color: var(--text-primary); }
+  .link-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
+  .link-card { display: block; text-decoration: none; color: inherit; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; background: var(--surface-1); }
+  .link-card:hover { border-color: var(--text-muted); }
+  .link-card .lt { font-weight: 640; font-size: 0.9rem; color: var(--text-primary); }
+  .link-card .ls { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+  .link-card .ld { font-size: 0.84rem; color: var(--text-secondary); margin-top: 4px; }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+  .stat { border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; background: var(--surface-1); }
+  .stat b { display: block; font-size: 1.3rem; letter-spacing: -0.01em; }
+  .stat span { font-size: 0.8rem; color: var(--text-secondary); }
+  .chart-wrap { max-width: 680px; margin: 14px 4px 4px; }
+  .chart-wrap svg { width: 100%; height: auto; display: block; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Physical AI 한계 연구 지도 (반도체 제조 관점)</h1>
+    <p class="sub">산업 준비도 진단, 실행·정밀도 한계, 안전·검증 보증, 데이터·드리프트, 반도체 장비 SW 도입 사례의 5개 테마로 정리한 논문 14편입니다. 성공 사례보다 실제 환경에 넣어 보고 무엇이 막혔는지를 기록한 연구를 골랐습니다.</p>
+    <p class="hint">논문 노드를 클릭하면 요약, 구조도, 주요 결과, 드러난 한계, 원문 링크가 열립니다.</p>
+  </header>
+
+  <p class="thesis">자료를 관통하는 결론은 하나입니다. <b>병목은 모델의 지능이 아니라 정밀도, 실시간성, 하드웨어 비이상성, 데이터 드리프트, 안전 인증이라는 물리 계층에 있습니다.</b> 그리고 성과를 낸 사례는 대부분 학습 모델 위에 검증된 결정론적 레이어나 사람의 판단을 남겨 두는 구조였습니다.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn" role="tab" id="tab-theme" aria-selected="true" data-panel="panel-theme">테마 지도</button>
+    <button class="tab-btn" role="tab" id="tab-time" aria-selected="false" data-panel="panel-time">시간순</button>
+    <button class="tab-btn" role="tab" id="tab-graph" aria-selected="false" data-panel="panel-graph">연관성 그래프</button>
+    <button class="tab-btn" role="tab" id="tab-matrix" aria-selected="false" data-panel="panel-matrix">병목 매트릭스</button>
+    <button class="tab-btn" role="tab" id="tab-terms" aria-selected="false" data-panel="panel-terms">용어와 정의</button>
+    <button class="tab-btn" role="tab" id="tab-market" aria-selected="false" data-panel="panel-market">시장과 정책</button>
+  </div>
+
+  <div class="panel active" id="panel-theme" role="tabpanel" aria-labelledby="tab-theme">
+    <div class="board">
+      <div class="legend-row" id="legend-theme"></div>
+      <div class="scroll-x"><svg class="big" id="mindmap" viewBox="0 0 1240 870" role="group" aria-label="테마별 한계 연구 마인드맵"></svg></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-time" role="tabpanel" aria-labelledby="tab-time">
+    <div class="board">
+      <div class="legend-row" id="legend-time"></div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-graph" role="tabpanel" aria-labelledby="tab-graph">
+    <div class="board">
+      <div class="legend-row" id="legend-graph"></div>
+      <div class="scroll-x"><svg class="big" id="relgraph" viewBox="0 0 1240 760" role="group" aria-label="논문 상호 연관성 그래프"></svg></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-matrix" role="tabpanel" aria-labelledby="tab-matrix">
+    <div class="board" style="padding: 16px 16px 20px;">
+      <p class="mx-intro">병목별로 어떤 논문이 근거를 제시했고, 논문들이 제안하거나 실증한 대응 방식이 무엇인지 정리했습니다. 논문 칩을 누르면 상세 내용이 열립니다.</p>
+      <div class="scroll-x">
+        <table class="mx">
+          <thead><tr><th>병목</th><th>근거 (논문이 보고한 내용)</th><th>논문에 나타난 대응 방식</th></tr></thead>
+          <tbody id="mx-body"></tbody>
+        </table>
+      </div>
+      <div class="pattern-box">
+        <b>반복되는 대응 구조</b>: 학습 모델이 최종 권한을 갖지 않습니다. J-PARC는 동결된 VLA 위에 잔차 보정기를 얹고, Simplex 계열은 검증된 기준 제어기에 전환 권한을 주며, Agents4PLC는 LLM이 만든 코드를 컴파일러와 형식 검증에 통과시키고, Lam Research 연구는 사람이 먼저 탐색한 뒤 알고리즘에 넘깁니다. 정확한 물리 모델, 검증 레이어, 도메인 판단을 만드는 쪽이 장비를 아는 엔지니어의 자리입니다.
+      </div>
+    </div>
+  </div>
+
+
+  <div class="panel" id="panel-terms" role="tabpanel" aria-labelledby="tab-terms">
+    <div class="board" style="padding: 16px 16px 22px;">
+      <h3 class="sec">Physical AI의 두 가지 계보</h3>
+      <div class="def-grid">
+        <div class="def-card" style="--tc: var(--c-ready)">
+          <div class="yr">2020년 11월 · 학계의 첫 정의</div>
+          <h4>Physical Artificial Intelligence (PAI)</h4>
+          <p>Empa와 Imperial College London의 Aslan Miriyev, Mirko Kovač가 Nature Machine Intelligence 2권 11호(658–660쪽)에서 정의했습니다. 지능을 가진 생물이 하는 일을 수행할 수 있는 물리 시스템을 만드는 이론과 실천을 뜻합니다.</p>
+          <p>재료과학, 기계공학, 컴퓨터과학, 생물학, 화학의 다섯 분야를 묶는 다학제 분야로 제안됐습니다. 디지털 "두뇌"에 지능적인 몸체가 결합해야 생물에 견줄 로봇이 나온다는 관점이라, <b>몸체 자체를 지능적으로 설계하는 것</b>이 핵심입니다.</p>
+          <div class="lk">
+            <a href="https://doi.org/10.1038/s42256-020-00258-y" target="_blank" rel="noopener noreferrer">논문 (DOI)</a>
+            <a href="https://empa.ch/web/s799/pai" target="_blank" rel="noopener noreferrer">Empa PAI 소개</a>
+            <a href="https://www.imperial.ac.uk/news/208053/skills-development-physical-ai-could-cultivate" target="_blank" rel="noopener noreferrer">Imperial 보도자료</a>
+          </div>
+        </div>
+        <div class="def-card" style="--tc: var(--c-exec)">
+          <div class="yr">2024년 6월~ · 산업계의 대중화</div>
+          <h4>Physical AI / Generative Physical AI (NVIDIA)</h4>
+          <p>젠슨 황이 Computex 2024(6월)와 SIGGRAPH 2024(7월)에서 "AI의 다음 물결"로 내세웠고, CES 2025(1월)에서 무대 전체의 주제가 됐습니다. 인식 AI → 생성 AI → 에이전틱 AI → 피지컬 AI로 이어지는 단계론으로 설명합니다.</p>
+          <p>NVIDIA 용어집은 자율 기계가 실제 물리 세계에서 인지하고 이해하며 복잡한 행동을 수행하게 하는 것으로 정의합니다. Cosmos 논문은 더 넓게 <b>센서와 액추에이터를 갖춘 AI 시스템</b>으로 정의하고, 학습·시뮬레이션·실행용 컴퓨터를 나누는 "3-컴퓨터 구조"를 함께 제시합니다.</p>
+          <div class="lk">
+            <a href="https://www.nvidia.com/es-la/glossary/physical-ai" target="_blank" rel="noopener noreferrer">NVIDIA 용어집</a>
+            <a href="https://arxiv.org/abs/2501.03575" target="_blank" rel="noopener noreferrer">Cosmos 논문</a>
+            <a href="https://perspectives.nvidia.com/physical-ai/omniverse/task/blog/nvidia-omniverse-simulation-engine-three-computer-architecture-physical-ai/" target="_blank" rel="noopener noreferrer">3-컴퓨터 구조</a>
+          </div>
+        </div>
+      </div>
+      <div class="pattern-box">
+        <b>두 정의의 차이가 혼란의 원인입니다.</b> 2020년 정의는 몸체에 지능을 설계해 넣는 좁은 연구 분야이고, 2024년 정의는 센서와 액추에이터가 있는 거의 모든 AI를 포함합니다. 그래서 기존 산업 자동화도 이름만 바꿔 달 수 있고, "시장과 정책" 탭의 시장 규모가 기관마다 수십 배씩 벌어집니다. 여러 매체와 대학 자료가 이 용어를 젠슨 황이 만든 것으로 소개하지만, 학술적 정의는 2020년이 먼저입니다.
+      </div>
+
+      <h3 class="sec">연표</h3>
+      <div class="mini-tl">
+        <div class="row"><div class="dt">2020.11</div><div class="tx"><b>Nature Machine Intelligence</b>에 "Skills for Physical Artificial Intelligence" 게재, 표지 논문으로 선정</div></div>
+        <div class="row"><div class="dt">2024.06</div><div class="tx"><b>Computex 2024</b> 기조연설에서 젠슨 황이 Physical AI를 AI의 다음 물결로 언급</div></div>
+        <div class="row"><div class="dt">2024.07</div><div class="tx"><b>SIGGRAPH 2024</b>에서 Physical AI에 AI·로보틱스·Omniverse 세 컴퓨터가 필요하다고 설명 (<a href="https://seekingalpha.com/news/4129838-nvidia-begins-ushering-in-next-wave-of-ai-physical-ai" target="_blank" rel="noopener noreferrer">기사</a>)</div></div>
+        <div class="row"><div class="dt">2025.01</div><div class="tx"><b>CES 2025</b>에서 "Physical AI 시대" 선언, 같은 달 Cosmos 세계 파운데이션 모델 플랫폼 공개</div></div>
+        <div class="row"><div class="dt">2026.02</div><div class="tx"><b>대한민국 인공지능행동계획(2026~2028)</b>에 "피지컬AI 1위 달성('30)" 목표 명시</div></div>
+        <div class="row"><div class="dt">2026.07</div><div class="tx"><b>과기정통부 "피지컬 AI 핵심경쟁력 확보전략"</b> 공개 (상세는 "시장과 정책" 탭)</div></div>
+      </div>
+
+      <h3 class="sec">관련 용어</h3>
+      <div class="scroll-x">
+        <table class="tbl">
+          <thead><tr><th style="width:19%">용어</th><th style="width:41%">뜻</th><th style="width:26%">이 지도와의 관계</th><th>참고</th></tr></thead>
+          <tbody>
+            <tr><td>Embodied AI (체화 AI)</td><td>지각과 행동이 물리적 신체에 묶인 AI. "몸을 가진 AI"로 Physical AI와 거의 같은 뜻으로 혼용됩니다.</td><td>학계 서베이에서 주로 쓰는 상위 개념</td><td><a class="src-a" href="https://arxiv.org/abs/2407.06886" target="_blank" rel="noopener noreferrer">서베이</a></td></tr>
+            <tr><td>VLA (Vision-Language-Action)</td><td>이미지와 자연어 지시를 받아 로봇 행동을 직접 출력하는 모델. 사전학습된 비전-언어 모델에 행동 출력부를 붙인 구조가 일반적입니다.</td><td>"실행·정밀도 한계" 테마의 평가 대상</td><td><a class="src-a" href="https://arxiv.org/abs/2410.24164" target="_blank" rel="noopener noreferrer">π0</a></td></tr>
+            <tr><td>RFM (Robotic Foundation Model)</td><td>과업·환경·몸체가 바뀌어도 적은 공학 노력으로 적응하는 범용 핵심을 가진 로봇 모델. Siemens 서베이는 VLA를 그 하위 범주로 봅니다.</td><td>"산업 준비도 진단" 테마의 평가 대상</td><td><a class="src-a" href="https://arxiv.org/abs/2603.06749" target="_blank" rel="noopener noreferrer">Siemens 서베이</a></td></tr>
+            <tr><td>World (Foundation) Model</td><td>물리 세계의 디지털 트윈 역할을 하는 범용 생성 모델. 사전학습 후 특정 환경에 맞춰 사후학습합니다.</td><td>NVIDIA와 국내 정부 전략 모두의 핵심 기술</td><td><a class="src-a" href="https://arxiv.org/abs/2501.03575" target="_blank" rel="noopener noreferrer">Cosmos</a></td></tr>
+            <tr><td>Generative Physical AI</td><td>생성 AI에 3D 세계의 공간 관계와 물리 거동에 대한 이해를 더한 것. NVIDIA가 쓰는 공식 명칭입니다.</td><td>산업계 정의의 출처</td><td><a class="src-a" href="https://www.nvidia.com/es-la/glossary/physical-ai" target="_blank" rel="noopener noreferrer">NVIDIA</a></td></tr>
+            <tr><td>Sim-to-Real</td><td>시뮬레이션에서 학습한 정책을 실제 장비로 옮기는 것. 실데이터 부족의 해법이자 실측 간극의 원천입니다.</td><td>데이터 병목의 대응책</td><td><a class="src-a" href="https://arxiv.org/abs/2305.17110" target="_blank" rel="noopener noreferrer">IndustReal</a></td></tr>
+            <tr><td>3-컴퓨터 구조</td><td>모델 학습용, 시뮬레이션용, 실제 기기에서 돌리는 실행용 컴퓨터를 나누는 NVIDIA의 개발 구조</td><td>엣지 전력·실시간성 병목과 직결</td><td><a class="src-a" href="https://perspectives.nvidia.com/physical-ai/omniverse/task/blog/nvidia-omniverse-simulation-engine-three-computer-architecture-physical-ai/" target="_blank" rel="noopener noreferrer">NVIDIA</a></td></tr>
+            <tr><td>Runtime Assurance (Simplex)</td><td>검증되지 않은 고급 제어기가 위험해지면 검증된 기준 제어기로 권한을 넘기는 런타임 안전 보증 구조</td><td>"안전·검증 보증" 테마</td><td><a class="src-a" href="https://arxiv.org/abs/2102.12981" target="_blank" rel="noopener noreferrer">Black-Box Simplex</a></td></tr>
+            <tr><td>Physical Intelligence (π)</td><td>개념어가 아니라 범용 로봇 파운데이션 모델 π0를 만든 회사 이름입니다. 혼동하기 쉽습니다.</td><td>VLA 계열 모델의 개발사</td><td><a class="src-a" href="https://pi.website/blog/pi0" target="_blank" rel="noopener noreferrer">π0 소개</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sec">읽을거리</h3>
+      <div class="link-grid">
+        <a class="link-card" href="https://www.imperial.ac.uk/news/208053/skills-development-physical-ai-could-cultivate" target="_blank" rel="noopener noreferrer"><div class="lt">Skills development in Physical AI could cultivate lifelike intelligent robots</div><div class="ls">Imperial College London · 2020.11</div><div class="ld">학계 정의를 처음 소개한 보도자료</div></a>
+        <a class="link-card" href="https://www.empa.ch/web/s604/lifelike-robots" target="_blank" rel="noopener noreferrer"><div class="lt">PAI: Physical Artificial Intelligence — On the way to lifelike robots</div><div class="ls">Empa · 2020.11</div><div class="ld">디지털 두뇌와 지능적 몸체의 결합이라는 원래 의도</div></a>
+        <a class="link-card" href="https://www.nvidia.com/es-la/glossary/physical-ai" target="_blank" rel="noopener noreferrer"><div class="lt">What is Generative Physical AI?</div><div class="ls">NVIDIA 용어집</div><div class="ld">산업계 정의, 강화학습과 합성 데이터의 역할</div></a>
+        <a class="link-card" href="https://seekingalpha.com/news/4129838-nvidia-begins-ushering-in-next-wave-of-ai-physical-ai" target="_blank" rel="noopener noreferrer"><div class="lt">Nvidia begins ushering in next wave of AI — physical AI</div><div class="ls">Seeking Alpha · 2024.07</div><div class="ld">SIGGRAPH 2024에서 '다음 물결'로 제시</div></a>
+        <a class="link-card" href="https://coe.northeastern.edu/news/uncovering-the-mystery-behind-physical-ai/" target="_blank" rel="noopener noreferrer"><div class="lt">Uncovering the Mystery Behind Physical AI</div><div class="ls">Northeastern University 공대</div><div class="ld">용어가 젠슨 황에게서 왔다고 보는 대표적 시각</div></a>
+        <a class="link-card" href="https://www.freshconsulting.com/insights/blog/what-is-physical-ai-20-definitions-lead-to-one-fresh-answer/" target="_blank" rel="noopener noreferrer"><div class="lt">What Is Physical AI? 20 definitions</div><div class="ls">Fresh Consulting</div><div class="ld">기업·연구소의 정의 20가지 비교</div></a>
+        <a class="link-card" href="https://talkinglogistics.com/2026/01/12/the-humanoid-robot-bubble-is-getting-hard-to-ignore/" target="_blank" rel="noopener noreferrer"><div class="lt">The Humanoid Robot Bubble Is Getting Hard to Ignore</div><div class="ls">Talking Logistics · 2026.01</div><div class="ld">시장 전망이 몇 년 새 수십 배 부풀어 오른 과정에 대한 비판</div></a>
+        <a class="link-card" href="https://www.mt.co.kr/tech/2026/07/02/2026070119534953689" target="_blank" rel="noopener noreferrer"><div class="lt">데이터·반도체까지 '국산화'… 정부, 피지컬AI 3년 내 '결판'</div><div class="ls">머니투데이 · 2026.07</div><div class="ld">과기정통부 핵심경쟁력 확보전략 요약</div></a>
+        <a class="link-card" href="https://zdnet.co.kr/view/?no=20260619115919" target="_blank" rel="noopener noreferrer"><div class="lt">정부, K-피지컬 AI 풀스택 전략 공개</div><div class="ls">ZDNet Korea · 2026.06</div><div class="ld">피지컬 AI 얼라이언스 2기 개편 방향</div></a>
+        <a class="link-card" href="https://www.sisajournal-e.com/news/articleView.html?idxno=423755" target="_blank" rel="noopener noreferrer"><div class="lt">피지컬 AI엔 절대강자 없다, 향후 3년이 골든타임</div><div class="ls">시사저널e · 2026.09</div><div class="ld">국산 피지컬 AI 모델 로드맵과 반도체 특화 모델</div></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-market" role="tabpanel" aria-labelledby="tab-market">
+    <div class="board" style="padding: 16px 16px 22px;">
+      <h3 class="sec">실측 데이터: 산업용 로봇 (IFR World Robotics 2026)</h3>
+      <p class="mx-intro" style="margin-left:4px">시장 전망보다 먼저 볼 숫자입니다. 국제로봇연맹(IFR)이 실제 설치 대수를 집계한 통계로, 2026년 9월 24일 발표됐습니다.</p>
+      <div class="def-card" style="--tc: var(--c-ready); margin: 0 0 12px; padding: 10px 14px;"><div class="lk" style="margin-top:0">
+        <a href="https://ifr.org/ifr-press-releases/five-million-robots-now-operate-in-factories-globally" target="_blank" rel="noopener noreferrer">IFR 보도자료 (2026.09.24)</a>
+        <a href="https://ifr.org/img/worldrobotics/Executive_Summary_WR_2026_-_Industrial_Robots.pdf" target="_blank" rel="noopener noreferrer">World Robotics 2026 요약본 (PDF)</a>
+        <a href="https://ifr.org/downloads/press_docs/EN-2026-SEP-24-IFR_Press_Release_WR-USA.pdf" target="_blank" rel="noopener noreferrer">미국 시장 보도자료 (PDF)</a>
+        <a href="https://ifr.org/ifr-press-releases/news/global-robot-demand-in-factories-doubles-over-10-years" target="_blank" rel="noopener noreferrer">IFR 보도자료 (2025.09.25, 2024년 수치)</a>
+      </div></div>
+      <div class="stat-row">
+        <div class="stat"><b>603,307대</b><span>2025년 세계 설치 대수 (+11%)</span></div>
+        <div class="stat"><b>5,079,078대</b><span>2025년 가동 중인 산업용 로봇 (+9%)</span></div>
+        <div class="stat"><b>354,000대</b><span>중국 설치 대수 (세계의 59%)</span></div>
+        <div class="stat"><b>30,000대</b><span>한국 설치 대수 (−1%)</span></div>
+        <div class="stat"><b>806,000대</b><span>2029년 IFR 전망</span></div>
+      </div>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 640 270" role="img" aria-label="산업용 로봇 연간 설치 대수: 2024년 54만2천, 2025년 60만3천, 2026년 전망 65만5천, 2029년 전망 80만6천">
+          <line x1="40" y1="230" x2="620" y2="230" style="stroke:var(--baseline); stroke-width:1.5"/>
+          <rect x="70"  y="109" width="90" height="121" rx="6" style="fill:color-mix(in srgb, var(--c-ready) 55%, var(--surface-1))"/>
+          <rect x="210" y="95"  width="90" height="135" rx="6" style="fill:var(--c-ready)"/>
+          <rect x="350" y="84"  width="90" height="146" rx="6" style="fill:color-mix(in srgb, var(--c-ready) 12%, var(--surface-1)); stroke:var(--c-ready); stroke-width:1.6; stroke-dasharray:6 4"/>
+          <rect x="490" y="50"  width="90" height="180" rx="6" style="fill:color-mix(in srgb, var(--c-ready) 12%, var(--surface-1)); stroke:var(--c-ready); stroke-width:1.6; stroke-dasharray:6 4"/>
+          <g style="font-size:14px; font-weight:700; fill:var(--text-primary)" text-anchor="middle">
+            <text x="115" y="100">542천</text><text x="255" y="86">603천</text><text x="395" y="75">655천</text><text x="535" y="41">806천</text>
+          </g>
+          <g style="font-size:12.5px; fill:var(--text-secondary)" text-anchor="middle">
+            <text x="115" y="250">2024</text><text x="255" y="250">2025</text><text x="395" y="250">2026 (전망)</text><text x="535" y="250">2029 (전망)</text>
+          </g>
+        </svg>
+        <p class="diag-caption">출처: IFR World Robotics <a href="https://ifr.org/ifr-press-releases/news/global-robot-demand-in-factories-doubles-over-10-years" target="_blank" rel="noopener noreferrer" style="color:inherit">2025</a>·<a href="https://ifr.org/img/worldrobotics/Executive_Summary_WR_2026_-_Industrial_Robots.pdf" target="_blank" rel="noopener noreferrer" style="color:inherit">2026</a> 보도자료·요약본. 점선은 IFR 전망치입니다. 2025년 실적에서 2029년 전망치까지의 연평균 증가율은 약 7.5%입니다(이 페이지에서 계산한 값).</p>
+      </div>
+
+      <h3 class="sec">Physical AI 시장 규모 전망 비교</h3>
+      <div class="chart-wrap" style="max-width:760px">
+        <svg viewBox="0 0 680 385" role="img" aria-label="기관별 시장 규모 전망, 로그 스케일. Acumen 5.02에서 82.79, SNS 5.23에서 87.43, Towards Healthcare 5.41에서 82.13, MarketsandMarkets 4.44에서 23.06(2030), PwC 2030년 430억 유로의 열 배인 4300억 유로, Goldman Sachs 휴머노이드 2035년 380억 달러, 상향 보도 1380억 달러">
+          <g style="stroke:var(--grid); stroke-width:1" stroke-dasharray="3 4">
+            <line x1="230" y1="22" x2="230" y2="335"/><line x1="366.7" y1="22" x2="366.7" y2="335"/><line x1="503.3" y1="22" x2="503.3" y2="335"/><line x1="640" y1="22" x2="640" y2="335"/>
+          </g>
+          <line x1="230" y1="335" x2="640" y2="335" style="stroke:var(--baseline); stroke-width:1.5"/>
+          <g style="font-size:11.5px; fill:var(--text-muted)" text-anchor="middle">
+            <text x="230" y="352">1</text><text x="366.7" y="352">10</text><text x="503.3" y="352">100</text><text x="640" y="352">1,000</text>
+            <text x="435" y="374">시장 규모 (십억, 로그 스케일)</text>
+          </g>
+          <g text-anchor="end">
+            <text x="220" y="46" style="font-size:13px; font-weight:650; fill:var(--text-primary)">Acumen Research</text><text x="220" y="62" style="font-size:11px; fill:var(--text-muted)">Physical AI · 2025→2035</text>
+            <text x="220" y="96" style="font-size:13px; font-weight:650; fill:var(--text-primary)">SNS Insider</text><text x="220" y="112" style="font-size:11px; fill:var(--text-muted)">Physical AI · 2025→2035</text>
+            <text x="220" y="146" style="font-size:13px; font-weight:650; fill:var(--text-primary)">Towards Healthcare</text><text x="220" y="162" style="font-size:11px; fill:var(--text-muted)">Physical AI · 2025→2035</text>
+            <text x="220" y="196" style="font-size:13px; font-weight:650; fill:var(--text-primary)">MarketsandMarkets</text><text x="220" y="212" style="font-size:11px; fill:var(--text-muted)">Embodied AI · 2025→2030</text>
+            <text x="220" y="246" style="font-size:13px; font-weight:650; fill:var(--text-primary)">PwC Strategy&amp;</text><text x="220" y="262" style="font-size:11px; fill:var(--text-muted)">광의(자동차 포함) · 2030 · 유로</text>
+            <text x="220" y="296" style="font-size:13px; font-weight:650; fill:var(--text-primary)">Goldman Sachs</text><text x="220" y="312" style="font-size:11px; fill:var(--text-muted)">휴머노이드 · 2035</text>
+          </g>
+          <g style="fill:color-mix(in srgb, var(--c-exec) 28%, var(--surface-1))">
+            <rect x="230" y="36" width="95.8" height="12" rx="3"/>
+            <rect x="230" y="86" width="98.2" height="12" rx="3"/>
+            <rect x="230" y="136" width="100.2" height="12" rx="3"/>
+            <rect x="230" y="186" width="88.5" height="12" rx="3"/>
+          </g>
+          <rect x="230" y="302" width="292.5" height="12" rx="3" style="fill:color-mix(in srgb, var(--c-exec) 10%, var(--surface-1)); stroke:var(--c-exec); stroke-width:1.4; stroke-dasharray:5 3"/>
+          <g style="fill:var(--c-exec)">
+            <rect x="230" y="52" width="262.1" height="12" rx="3"/>
+            <rect x="230" y="102" width="265.4" height="12" rx="3"/>
+            <rect x="230" y="152" width="261.7" height="12" rx="3"/>
+            <rect x="230" y="202" width="186.3" height="12" rx="3"/>
+            <rect x="230" y="252" width="359.9" height="12" rx="3"/>
+            <rect x="230" y="302" width="215.9" height="12" rx="3"/>
+          </g>
+          <g style="font-size:11.5px; fill:var(--text-secondary)">
+            <text x="331" y="46">$5.02B (2025)</text>
+            <text x="333" y="96">$5.23B (2025)</text>
+            <text x="335" y="146">$5.41B (2025)</text>
+            <text x="323" y="196">$4.44B (2025)</text>
+            <text x="236" y="246" style="fill:var(--text-muted)">기준값 미공개</text>
+          </g>
+          <g style="font-size:12px; font-weight:700; fill:var(--text-primary)">
+            <text x="497" y="62">$82.79B</text>
+            <text x="500" y="112">$87.43B</text>
+            <text x="497" y="162">$82.13B</text>
+            <text x="421" y="212">$23.06B</text>
+            <text x="595" y="262">€430B</text>
+            <text x="528" y="312">$38B → $138B*</text>
+          </g>
+        </svg>
+        <p class="diag-caption">옅은 막대는 기준값(2025), 진한 막대는 전망값입니다. 값의 범위가 수십 배라 로그 스케일로 그렸습니다. PwC는 유로 기준이라 달러와 직접 비교되지 않습니다. *골드만삭스의 점선은 2026년 재상향 보도치(2차 보도)입니다.</p>
+      </div>
+
+      <div class="chart-wrap" style="max-width:760px; margin-top:18px">
+        <svg viewBox="0 0 680 235" role="img" aria-label="연평균 성장률 비교: Acumen 32.8퍼센트, SNS 32.53퍼센트, Towards Healthcare 31.26퍼센트, MarketsandMarkets 39.0퍼센트, IFR 산업용 로봇 설치 대수 약 7.5퍼센트">
+          <g style="stroke:var(--grid); stroke-width:1" stroke-dasharray="3 4">
+            <line x1="230" y1="12" x2="230" y2="195"/><line x1="330" y1="12" x2="330" y2="195"/><line x1="430" y1="12" x2="430" y2="195"/><line x1="530" y1="12" x2="530" y2="195"/><line x1="630" y1="12" x2="630" y2="195"/>
+          </g>
+          <line x1="230" y1="195" x2="640" y2="195" style="stroke:var(--baseline); stroke-width:1.5"/>
+          <g style="font-size:11.5px; fill:var(--text-muted)" text-anchor="middle">
+            <text x="230" y="212">0%</text><text x="330" y="212">10%</text><text x="430" y="212">20%</text><text x="530" y="212">30%</text><text x="630" y="212">40%</text>
+            <text x="435" y="231">연평균 성장률 (CAGR)</text>
+          </g>
+          <g text-anchor="end" style="font-size:12.5px; font-weight:650; fill:var(--text-primary)">
+            <text x="220" y="33">Acumen (금액)</text><text x="220" y="69">SNS Insider (금액)</text><text x="220" y="105">Towards Healthcare (금액)</text><text x="220" y="141">MarketsandMarkets (금액)</text><text x="220" y="177">IFR 로봇 설치 (대수)</text>
+          </g>
+          <g style="fill:var(--c-exec)">
+            <rect x="230" y="20" width="328" height="18" rx="3"/>
+            <rect x="230" y="56" width="325.3" height="18" rx="3"/>
+            <rect x="230" y="92" width="312.6" height="18" rx="3"/>
+            <rect x="230" y="128" width="390" height="18" rx="3"/>
+          </g>
+          <rect x="230" y="164" width="75" height="18" rx="3" style="fill:var(--c-ready)"/>
+          <g style="font-size:12px; font-weight:700; fill:var(--text-primary)">
+            <text x="564" y="33">32.8%</text><text x="561" y="69">32.53%</text><text x="548" y="105">31.26%</text><text x="626" y="141">39.0%</text><text x="311" y="177">약 7.5%</text>
+          </g>
+        </svg>
+        <p class="diag-caption">주황 막대는 리포트들이 제시한 금액 기준 CAGR, 파란 막대는 IFR 설치 대수 전망(2025→2029)으로 이 페이지에서 계산한 값입니다. 단위가 달라 직접 비교할 수는 없지만, 전망 리포트의 성장률과 실제 설치 추세의 차이를 가늠하는 참고용입니다.</p>
+      </div>
+      <div class="scroll-x">
+        <table class="tbl">
+          <thead><tr><th style="width:17%">기관</th><th style="width:22%">대상 (정의 범위)</th><th style="width:13%">기준값</th><th style="width:20%">전망</th><th style="width:12%">CAGR</th><th>출처</th></tr></thead>
+          <tbody>
+            <tr><td>Acumen Research</td><td>Physical AI (좁은 정의)</td><td class="num">2025 · $5.02B</td><td class="num">2035 · $82.79B</td><td class="num">32.8%</td><td><a class="src-a" href="https://www.acumenresearchandconsulting.com/physical-ai-market" target="_blank" rel="noopener noreferrer">리포트 요약</a></td></tr>
+            <tr><td>SNS Insider</td><td>Physical AI</td><td class="num">2025 · $5.23B</td><td class="num">2035 · $87.43B</td><td class="num">32.53%</td><td><a class="src-a" href="https://www.snsinsider.com/reports/physical-ai-market-9007" target="_blank" rel="noopener noreferrer">리포트 요약</a></td></tr>
+            <tr><td>Towards Healthcare</td><td>Physical AI</td><td class="num">2025 · $5.41B</td><td class="num">2035 · $82.13B</td><td class="num">31.26%</td><td><a class="src-a" href="https://www.towardshealthcare.com/insights/physical-ai-market" target="_blank" rel="noopener noreferrer">리포트 요약</a></td></tr>
+            <tr><td>MarketsandMarkets</td><td>Embodied AI</td><td class="num">2025 · $4.44B</td><td class="num">2030 · $23.06B</td><td class="num">39.0%</td><td><a class="src-a" href="https://www.marketsandmarkets.com/Market-Reports/embodied-ai-market-83867232.html" target="_blank" rel="noopener noreferrer">리포트 요약</a></td></tr>
+            <tr><td>PwC Strategy&amp;</td><td>Physical AI 시스템 (자동차 포함 광의)</td><td class="num">—</td><td class="num">2030 · 약 €430B<br><span style="color:var(--text-muted)">자동차 €171B, 산업자동화·물류창고 €69B</span></td><td class="num">—</td><td><a class="src-a" href="https://www.strategyand.pwc.com/de/en/industries/telecommunication-media-and-technology/physical-ai.html" target="_blank" rel="noopener noreferrer">보고서</a></td></tr>
+            <tr><td>Goldman Sachs</td><td>휴머노이드 로봇</td><td class="num">—</td><td class="num">2035 · $38B (2024.2)<br><span style="color:var(--text-muted)">2026년 $138B·650만 대로 재상향 보도</span></td><td class="num">—</td><td><a class="src-a" href="https://goldmansachs.com/insights/articles/the-global-market-for-robots-could-reach-38-billion-by-2035" target="_blank" rel="noopener noreferrer">원문</a> <a class="src-a" href="https://humanoid.guide/?p=18115" target="_blank" rel="noopener noreferrer">상향 보도</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pattern-box">
+        <b>수치를 읽는 법.</b> 같은 "Physical AI 시장"이 좁게 잡으면 2025년 약 50억 달러, 자동차까지 넣으면 2030년 약 4,300억 유로입니다. 유료 리포트 요약치들은 CAGR 31–33%로 비슷하게 수렴하지만 정의와 방법론은 공개하지 않습니다. 반면 IFR은 실제 설치 대수를 세는 통계이고, 산업용 로봇 설치 증가율은 한 자릿수에서 10% 초반입니다. 금액과 대수는 직접 비교할 수 없지만, "연 30% 성장"이 기존 자동화와 구분되는 신규 영역인지는 따져 볼 필요가 있습니다. 골드만삭스도 기본 시나리오를 내놓으면서 범용 휴머노이드의 실용성은 아직 입증되지 않았다고 명시합니다.
+      </div>
+
+      <h3 class="sec">국내 정책 흐름</h3>
+      <div class="mini-tl">
+        <div class="row"><div class="dt">2025.12</div><div class="tx"><b>과기정통부 2026년 업무계획</b>: 제조·물류·조선 등 강점 분야 중심의 "(가칭) 물리적 인공지능 구축·확산 전략"을 2026년 상반기에 수립하겠다고 보고 (<a href="https://www.bioin.or.kr/board.do?num=331788&cmd=view&bid=division" target="_blank" rel="noopener noreferrer">보도자료</a>)</div></div>
+        <div class="row"><div class="dt">2026.02</div><div class="tx"><b>대한민국 인공지능행동계획(2026~2028)</b>: 피지컬AI 1위 달성('30) 목표, 월드모델·로봇 파운데이션 모델·고성능 AI반도체 기반 HW 플랫폼 확보 권고 (<a href="https://smartcity.go.kr/wp-content/uploads/2026/03/%EC%95%88%EA%B1%B41%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD%EC%9D%B8%EA%B3%B5%EC%A7%80%EB%8A%A5%ED%96%89%EB%8F%99%EA%B3%84%ED%9A%8D%EC%9D%B8%EA%B3%B5%EC%A7%80%EB%8A%A5%EA%B8%B0%EB%B3%B8%EA%B3%84%ED%9A%8D20262028.pdf" target="_blank" rel="noopener noreferrer">원문 PDF</a>)</div></div>
+        <div class="row"><div class="dt">2026.06</div><div class="tx"><b>피지컬 AI 얼라이언스 2기</b>: 한국형 풀스택 플랫폼, 행동 데이터 확보용 트레이닝센터, (가칭) 피지컬 AI 진흥법 제정 추진 (<a href="https://zdnet.co.kr/view/?no=20260619115919" target="_blank" rel="noopener noreferrer">ZDNet Korea</a>)</div></div>
+        <div class="row"><div class="dt">2026.07.01</div><div class="tx"><b>과기정통부 "피지컬 AI 핵심경쟁력 확보전략"</b>: 데이터·핵심기술·산업확산·생태계 4대 분야, 파운데이션모델·월드모델·초저지연 AI반도체 플랫폼 3대 기반기술, 국제표준과 시험·인증체계 마련. 향후 3년을 골든타임으로 판단 (<a href="https://zdnet.co.kr/view/?no=20260701161645" target="_blank" rel="noopener noreferrer">ZDNet Korea</a>, <a href="https://www.mt.co.kr/tech/2026/07/02/2026070119534953689" target="_blank" rel="noopener noreferrer">머니투데이</a>)</div></div>
+        <div class="row"><div class="dt">2026.07.01</div><div class="tx"><b>국민성장펀드 M.AX 프론티어 프로젝트</b>(금융위·산업부): 올해 공급분 30조원 중 약 16조원을 AI·로봇·미래차·방산·반도체·이차전지 등 피지컬 AI 관련 분야에 투입 (<a href="https://www.fnnews.com/news/202607011807584120" target="_blank" rel="noopener noreferrer">파이낸셜뉴스</a>)</div></div>
+        <div class="row"><div class="dt">2026.07.13</div><div class="tx"><b>국가재정전략회의</b>: 산업부 "반도체·AI 로봇" 메가프로젝트 발표, 기업의 957조원 규모 반도체 팹 투자에 맞춘 생태계 조성 (<a href="https://www.etnews.com/20260713000280" target="_blank" rel="noopener noreferrer">전자신문</a>)</div></div>
+      </div>
+      <div class="pattern-box">
+        <b>한계 연구와의 접점.</b> 정부 전략도 데이터 확보, 데이터 품질·상호운용성 표준, 시험·인증체계, 안전 신뢰를 핵심 과제로 꼽습니다. "병목 매트릭스" 탭에서 논문들이 지적한 데이터·검증 병목과 같은 지점입니다. 반도체 장비처럼 정밀도와 인증 요구가 높은 영역은 이 과제가 가장 먼저 드러나는 곳이기도 합니다.
+      </div>
+    </div>
+  </div>
+
+  <section class="list" aria-label="논문 목록">
+    <h2>논문 목록 (시간순)</h2>
+    <div id="paper-list"></div>
+  </section>
+
+  <footer class="src" id="foot-note"></footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div class="modal-head">
+      <span class="tag"><span class="dot" id="m-dot"></span><span id="m-branch"></span></span>
+      <h2 id="m-title"></h2>
+      <div class="meta" id="m-meta"></div>
+      <div class="links" id="m-links"></div>
+      <button class="close-btn" id="m-close" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3>게재 정보와 선정 이유</h3>
+      <div class="metric-box" id="m-metric"></div>
+      <h3>요약</h3>
+      <p id="m-summary"></p>
+      <h3>연구 구조</h3>
+      <div class="diagram-holder" id="m-diagram"></div>
+      <p class="diag-caption" id="m-caption"></p>
+      <h3>주요 결과</h3>
+      <p class="results" id="m-results"></p>
+      <h3>드러난 한계</h3>
+      <div class="limit-box" id="m-limit"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   데이터 (2026-10-11 확인, 각 논문 초록·본문 기준)
+   ========================================================= */
+const THEMES = {
+  ready:  { label: "산업 준비도 진단",          cssVar: "--c-ready"  },
+  exec:   { label: "실행·정밀도 한계",          cssVar: "--c-exec"   },
+  assure: { label: "안전·검증 보증",            cssVar: "--c-assure" },
+  data:   { label: "데이터·드리프트",           cssVar: "--c-data"   },
+  semi:   { label: "반도체 장비 SW 도입 사례",  cssVar: "--c-semi"   }
+};
+
+const PAPERS = {
+  /* ---------- 산업 준비도 진단 ---------- */
+  kube: {
+    theme: "ready", short: "RFMs for Industrial Control", sub: "324개 모델 산업 성숙도 평가",
+    title: "Robotic Foundation Models for Industrial Control: A Comprehensive Survey and Readiness Assessment Framework",
+    date: "2026-03", arxivId: "2603.06749",
+    meta: "David Kube, Simon Hadwiger (Siemens AG), Tobias Meisen (Univ. Wuppertal) · arXiv 2603.06749",
+    venue: "arXiv 2026 (Siemens)", evType: "서베이 + 정량 평가",
+    why: "로봇 파운데이션 모델을 산업 배포 관점에서 정량 평가한 거의 유일한 서베이입니다. 저자들이 수집한 서베이 55편 중 산업에 초점을 둔 것은 2편뿐이라고 직접 지적합니다.",
+    summary: "산업 문헌에서 11개의 산업 함의(적응성, 안전·규정 준수, 실시간성, 정밀도, 비용·통합 등)를 도출하고, 이를 149개 평가 기준으로 구체화했습니다. 이 기준으로 조작 가능한 로봇 파운데이션 모델 324개를 LLM 보조 파이프라인으로 평가해 48,276건의 기준별 판정을 냈고, 일부는 전문가 판단과 대조해 검증했습니다.",
+    stages: ["산업 문헌 125편|정밀 리뷰", "11개 산업 함의|도출", "47개 속성 ×|함의 매트릭스", "149개 평가 기준|카탈로그", "324개 RFM|성숙도 평가"],
+    results: "최상위 모델도 기준의 일부만 충족하며, 특정 함의에서만 좁게 강한 패턴을 보였습니다. 엣지 하드웨어 분석에서는 학계 벤치마크에 쓰이는 데스크톱 GPU(RTX 5090)가 중앙값 코봇보다 두 배 넘는 전력을 소모한다는 점을 짚었습니다.",
+    limit: "산업 성숙도는 제한적이고 불균등합니다. 저자들은 진전이 개별 벤치마크 성공보다 안전, 실시간 실행 가능성, 강건한 인지, 비용 효율적 통합을 감사 가능한 배포 스택에 체계적으로 넣는 데 달려 있다고 결론짓습니다.",
+    caption: "산업 요구사항을 기준 카탈로그로 바꾼 뒤 모델 전체를 같은 잣대로 판정하는 구조"
+  },
+  henkel: {
+    theme: "ready", short: "FM-based Industrial Agents", sub: "산업 자동화 에이전트 체계적 리뷰",
+    title: "Foundation-Model-Based Agents in Industrial Automation: Purposes, Capabilities, and Open Challenges",
+    date: "2026-05", arxivId: "2605.02592",
+    meta: "Vincent Henkel, Felix Gehlhoff (Helmut Schmidt Univ.) 외 · Fraunhofer IPA, ifak, Siemens, Univ. Stuttgart 등 공동 · arXiv 2605.02592",
+    venue: "arXiv 2026", evType: "체계적 문헌 리뷰 (PRISMA 2020)",
+    why: "독일 산업자동화 연구기관들이 모여 LLM 기반 산업 에이전트가 실제로 어디에 쓰이고 어디서 막히는지를 기존 에이전트 시스템과 비교해 정량화했습니다.",
+    summary: "PRISMA 2020 지침에 따라 2,341편을 스크리닝하고 88편을 구조화된 코딩 체계로 분석했습니다. 기존 산업 에이전트 시스템의 역량 기준선과 비교해 파운데이션 모델 기반 에이전트의 기능 프로파일 변화를 측정했습니다.",
+    stages: ["2,341편|스크리닝", "88편 코퍼스|확정", "구조화 코딩|용도·역량·한계", "기존 에이전트|기준선 비교", "작업 정의|제안"],
+    results: "용도는 사용자 지원, 모니터링, 공정 최적화에 집중되어 있고 계획·스케줄링 같은 전통적 생산 제어 용도는 적었습니다. 역량은 인간 상호작용(+37%)과 불확실성 대응(+35%)에서 크게 늘었지만 협상(-39%)에서 크게 부족했습니다.",
+    limit: "가장 많이 보고된 한계는 일반화 부족, 할루시네이션과 출력 불안정, 데이터 부족, 추론 지연입니다. 즉 LLM 에이전트는 아직 제어 루프 바깥의 보조 역할에 머물러 있습니다.",
+    caption: "문헌을 코딩해 '실제로 무엇에 쓰이는가'를 기존 에이전트와 비교하는 구조"
+  },
+
+  /* ---------- 실행·정밀도 한계 ---------- */
+  vlaind: {
+    theme: "exec", short: "VLA → 산업 전이 실측", sub: "π0 정밀 배치 오차 2.2 cm",
+    title: "Transferring Vision-Language-Action Models to Industry Applications: Architectures, Performance, and Challenges",
+    date: "2025-09", arxivId: "2509.23121",
+    meta: "Shuai Li 외 (중국과학원 선양자동화연구소, KTH 등) · arXiv 2509.23121 · IEEE 투고",
+    venue: "arXiv 2025", evType: "실물 실험",
+    why: "\"최신 VLA가 산업 요구를 충족하는가\"라는 질문을 정면으로 던지고 실물 로봇으로 수치를 낸 연구입니다. 정밀 배치에서의 센티미터 단위 오차를 명시적으로 보고합니다.",
+    summary: "산업 시나리오 3종에서 VLA(π0)의 랜덤 피킹과 정밀 배치를 평가했습니다. 산업 현장에서 흔한 4가지 교란(시각 가림, 카메라 흔들림, 물체 자세 무작위화, 물체 다양성)을 걸고, 과제당 100개의 실제 산업 에피소드로 파인튜닝한 뒤 Mobile ALOHA 양팔 로봇에서 실측했습니다.",
+    stages: ["산업 과제 3종|설계", "4종 교란|정의", "과제당 100 에피소드|파인튜닝", "Mobile ALOHA|실측", "정밀 배치|오차 측정"],
+    results: "제로샷 설정에서는 평가한 어떤 VLA도 파지에 성공하지 못했습니다. 파인튜닝 후 단순 파지 성공률은 약 60%였고, 정밀 배치 오차는 최대 2.2 cm와 12.4°에 달했습니다. 대형 VLA의 추론 주기는 10 Hz 미만인 경우가 많아 동작 떨림과 지연을 일으켰고, 적응에는 수백 개의 도메인 특화 에피소드가 필요했습니다.",
+    limit: "저자들은 원인을 산업 데이터 부족, 고정밀 요구, 연산·추론 지연으로 정리합니다. 액션 청킹은 청크를 키우면 빨라지지만 미세 제어 정확도가 떨어지는 트레이드오프가 있고, 상대 엔드이펙터 제어는 역기구학에 의존해 산업 수준의 정밀도와 안전성이 부족하다고 지적합니다.",
+    caption: "산업 교란을 체계적으로 걸어 놓고 파지와 정밀 배치를 분리 측정하는 실험 설계"
+  },
+  so101: {
+    theme: "exec", short: "SO-101 VLA 벤치마크", sub: "실패·복구 분석 · 실행 불안정",
+    title: "Benchmarking Vision-Language-Action Models on SO-101: Failure and Recovery Analysis",
+    date: "2026-06", arxivId: "2606.08881",
+    meta: "Yi Yu, Xinchuan Qiu (Hiroshima Univ.) · arXiv 2606.08881",
+    venue: "arXiv 2026", evType: "실물 실험 (320 에피소드)",
+    why: "성공률만 보지 않고 실패를 4가지로 분류하고 복구율까지 측정했습니다. 저가 하드웨어의 노이즈를 'VLA 스트레스 테스트'로 삼은 관점이 장비 엔지니어 입장에서 특히 유용합니다.",
+    summary: "저가 SO-101 매니퓰레이터에서 π0.5, SmolVLA, Wall-X와 모방학습 기준선 ACT를 같은 조건으로 비교했습니다. 과제당 100개의 원격조작 시연으로 파인튜닝하고, 4개 과제에 대해 모델별 20회씩 총 320회 실물 평가를 수행했습니다.",
+    stages: ["과제당 시연 100개|원격조작", "4개 정책|파인튜닝", "320 실물|에피소드", "실패 4종 분류|파지·반복·상태·정밀", "복구율|측정"],
+    results: "평균 성공률은 π0.5 56.25%, Wall-X 51.25%, ACT 33.75%, SmolVLA 32.5%였습니다. 색상 선별 과제는 모든 정책이 0–10%에 그쳤습니다. 실패 후 복구율은 π0.5 30.77%에서 SmolVLA 3.23%까지 크게 갈렸습니다.",
+    limit: "모든 정책에서 실행 불안정(파지 불안정, 반복 루프)이 지배적 실패 원인이었습니다. 플랫폼의 액추에이터 노이즈, 관절 백래시, 제어 지연, 궤적 떨림, 반복 정밀도 한계, 시각-동작 캘리브레이션 오차가 오차를 누적시켰고, 이진 성공률만으로는 강건성을 평가할 수 없다는 결론입니다.",
+    caption: "성공률 → 실패 유형 → 복구 능력의 3단으로 강건성을 분해하는 평가 구조"
+  },
+  jparc: {
+    theme: "exec", short: "VLA × 관절 물리 결함", sub: "J-PARC 잔차 보정 (서울대)",
+    title: "Uncovering Vulnerability of Vision-Language-Action Models under Joint-Level Physical Faults",
+    date: "2026-06", arxivId: "2606.10501",
+    meta: "Minsoo Jo, Taeju Kwon 외 (서울대학교 데이터사이언스대학원) · arXiv 2606.10501",
+    venue: "arXiv 2026 (서울대)", evType: "시뮬레이션 + 실물 검증",
+    why: "관절 잠금, 가동범위 제한, 마찰 증가처럼 실제 장비에서 생기는 열화가 VLA를 어떻게 무너뜨리는지 분석했습니다. 해법도 VLA를 다시 학습시키는 대신 그 위에 가벼운 보정 레이어를 얹는 방식입니다.",
+    summary: "VLA는 로봇 몸체가 명령을 그대로 실현한다고 가정합니다. 이 연구는 그 가정이 깨질 때의 취약성을 분석하고, 최근 관절 동역학에서 결함 상태를 추정해 동결된 VLA의 병진 명령에 잔차를 더하는 J-PARC를 제안합니다.",
+    stages: ["최근 관절 동역학|관측", "결함 레짐 추정|(MLP + GRU)", "동결 VLA|액션 청크", "병진 잔차|보정", "보정 액션 실행|이력 갱신"],
+    results: "LIBERO 관절 잠금 조건에서 평균 성공률이 π0.5는 48.4%에서 55.2%로, OpenVLA-OFT는 42.3%에서 46.8%로 올랐고, 무결함 환경 성능은 유지됐습니다. 학습에 쓰지 않은 마찰 결함에도 일반화됐습니다. 실물 WidowX 로봇에서 관절을 잠그자 기본 정책은 모든 시행에서 실패했고, J-PARC는 대부분 성공했습니다.",
+    limit: "과제가 물리적으로 가능한 마찰 증가만으로도 성공률이 떨어졌고, 결함 관절을 완벽히 안다고 가정한 제약 역기구학도 개선하지 못했습니다. 결함이 누적되면 정상 동역학으로 돌아가도 회복이 어려웠습니다. J-PARC 자체도 과제별 무결함 기준 궤적이 필요하다는 한계를 저자들이 명시합니다.",
+    caption: "결함 상태를 추정하고, 동결된 정책 위에 잔차만 더하는 보정 레이어 구조"
+  },
+
+  /* ---------- 안전·검증 보증 ---------- */
+  brunke: {
+    theme: "assure", short: "Safe Learning in Robotics", sub: "학습 제어 ↔ 안전 RL 통합 리뷰",
+    title: "Safe Learning in Robotics: From Learning-Based Control to Safe Reinforcement Learning",
+    date: "2021-08", arxivId: "2108.06266",
+    meta: "Lukas Brunke, Melissa Greeff, Adam W. Hall 외 · Annual Review of Control, Robotics, and Autonomous Systems (2022) · arXiv 2108.06266",
+    venue: "Annual Review 2022", evType: "리뷰",
+    why: "제어 이론과 강화학습 양쪽의 안전 학습 연구를 하나의 언어로 묶은 기준 리뷰입니다. 학습 기반 제어를 실제 장비에 넣을 때 '무엇을 인증할 수 있는가'의 출발점이 됩니다.",
+    summary: "불확실한 동역학을 학습해 안전하게 성능을 올리는 학습 기반 제어, 안전과 강건성을 장려하는 강화학습, 학습된 제어 정책의 안전을 형식적으로 인증하는 방법의 세 갈래로 정리합니다.",
+    stages: ["불확실 동역학 학습|기반 제어", "안전·강건성|장려 RL", "학습 정책|안전 인증", "물리 기반|벤치마크"],
+    results: "두 커뮤니티의 방법론을 통합된 문제 정의 아래 비교하고, 공정한 비교를 위한 현실적 물리 기반 벤치마크의 필요성을 강조했습니다.",
+    limit: "사람과 가까운 곳처럼 안전이 필수인 실환경에서 학습 기반 제어를 언제 어떻게 써야 하는지는 여전히 열린 과제이며, 제어와 강화학습 접근을 공정하게 비교할 현실적 벤치마크가 부족하다고 지적합니다.",
+    caption: "학습 제어의 안전 확보 방식을 세 갈래로 나누어 보는 분류 구조"
+  },
+  nsa: {
+    theme: "assure", short: "Neural Simplex", sub: "안전 보장 + 온라인 재학습",
+    title: "Neural Simplex Architecture",
+    date: "2019-08", arxivId: "1908.00528",
+    meta: "Dung T. Phan, Radu Grosu, Nils Jansen, Nicola Paoletti, Scott A. Smolka, Scott D. Stoller · arXiv 1908.00528",
+    venue: "arXiv 2019 (NFM 2020)", evType: "방법론 + 사례",
+    why: "강화학습으로 얻은 신경망 제어기에 안전 보장을 주면서도, 기준 제어기로 넘어간 뒤 성능이 계속 묶이는 기존 Simplex의 문제를 다뤘습니다. 안전 PLC를 기준 제어기로 보는 시각과 바로 연결됩니다.",
+    summary: "Sha 등의 Simplex 제어 구조를 확장해, 신경망 제어기가 불안전한 출력을 내면 검증된 기준 제어기로 전환하고, 그 사이 신경망 제어기를 온라인으로 재학습한 뒤 다시 권한을 돌려주는 역전환을 도입했습니다.",
+    stages: ["신경망 제어기|동작", "불안전 출력|감지", "검증된 기준|제어기 전환", "온라인|재학습", "역전환으로|복귀"],
+    results: "장애물 지대를 주행하는 지상 로버와 인공췌장 신경망 제어기 사례에서, 안전을 유지하면서 신경망 제어기의 안전성 자체를 개선할 수 있음을 보였습니다.",
+    limit: "전통 Simplex는 기준 제어기로 넘어가면 그대로 머물러 성능을 잃고, 고급 제어기를 교정할 방법이 없다는 한계를 출발점으로 삼습니다.",
+    caption: "검증된 기준 제어기가 최종 권한을 갖고, 학습 제어기는 감시 아래 개선되는 구조"
+  },
+  bbsimplex: {
+    theme: "assure", short: "Black-Box Simplex", sub: "런타임 검사로 안전 보증",
+    title: "The Black-Box Simplex Architecture for Runtime Assurance of Autonomous CPS",
+    date: "2021-02", arxivId: "2102.12981",
+    meta: "Usama Mehmood, Sanaz Sheikhi, Stanley Bak, Scott A. Smolka, Scott D. Stoller (Stony Brook Univ.) · arXiv 2102.12981",
+    venue: "arXiv 2021", evType: "방법론 + 증명",
+    why: "기준 제어기의 정적 검증 요구마저 런타임 검사로 대체해, MPC나 신경망처럼 정적 검증이 어려운 제어기를 안전하게 쓸 수 있는 틀을 제시합니다.",
+    summary: "검증되지 않은 고급 제어기에서 백업 기준 제어기로 제어 권한을 넘겨 자율 CPS의 안전을 유지하는 런타임 보증 프레임워크입니다. 두 제어기의 내부 정보를 쓰지 않아 블랙박스 Simplex라고 부릅니다.",
+    stages: ["고급 제어기|(MPC · 신경망)", "런타임|안전 검사", "결정 모듈|권한 전환", "백업|기준 제어기"],
+    results: "구조의 안전성을 증명했고, MPC 기반 다중 로봇 협조와 F-16 편대의 신경망 충돌 회피 사례에서 제어기가 간헐적으로 불안전한 명령을 내도 안전이 유지됨을 보였습니다.",
+    limit: "실무에서 잘 작동하는 강력한 제어 기법일수록 정적 검증이 어렵다는 현실을 전제로 합니다. 학습 모델의 지능과 최종 제어 권한을 분리해야 한다는 메시지입니다.",
+    caption: "지능(고급 제어기)과 권한(결정 모듈)을 분리하는 런타임 보증 구조"
+  },
+
+  /* ---------- 데이터·드리프트 ---------- */
+  iad: {
+    theme: "data", short: "산업 이상탐지 최신 동향", sub: "파운데이션 모델 사전지식 시대",
+    title: "A Survey of Recent Advances in Industrial Anomaly Detection: From Normal-Only Training to Foundation-Model Priors",
+    date: "2026-08", arxivId: null,
+    url: "https://www.preprints.org/manuscript/202606.0719/v2",
+    meta: "Preprints.org 202606.0719 (v2, 2026년 8월 게시, 비심사 프리프린트)",
+    venue: "Preprint 2026", evType: "서베이",
+    why: "AOI와 직결되는 산업 이상탐지 분야에서, 파운데이션 모델 기반 방법의 성과와 함께 배포 조건에서의 근거 부족을 명시적으로 정리했습니다. 동료 심사 전 프리프린트라는 점은 감안해야 합니다.",
+    summary: "제품마다 정상 이미지로 검출기를 따로 학습하던 방식을, 웹 사전학습 비전 인코더, 멀티모달 LLM, 전문가 혼합, 생성 모델이 어떻게 대체하는지 최근 3년 문헌을 5가지 사전지식(시각, 추론, 기하·멀티모달, 범용, 합성)으로 분류했습니다.",
+    stages: ["시각 사전|(CLIP·DINOv2·SAM)", "추론 사전|(MLLM)", "기하·멀티모달|사전", "범용 사전|(전문가 혼합)", "합성 사전|(이상 데이터 생성)"],
+    results: "큐레이션된 벤치마크에서는 진전이 보고되며, 새로운 벤치마크 세대와 반복되는 배포 병목을 함께 분석했습니다. 물리 동역학에 기반한 산업 영상이 단일 프레임 검사를 넘어서는 새 방향으로 제시됩니다.",
+    limit: "도메인 시프트 상황, 오픈월드 평가 프로토콜, 오탐률이 낮아야 하는 운영점에서는 근거가 여전히 제한적이라고 정리합니다. 양산 라인에서 가장 중요한 조건들입니다.",
+    caption: "제품별 학습을 대체하는 다섯 가지 사전지식의 분류"
+  },
+  vmreview: {
+    theme: "data", short: "반도체 가상 계측(VM) 리뷰", sub: "\"아직 초기 단계\" 진단",
+    title: "Virtual metrology in semiconductor manufacturing: Current status and future prospects",
+    date: "2024-02", arxivId: null,
+    url: "https://doi.org/10.1016/j.eswa.2024.123559",
+    meta: "Varad Maitra, Yutai Su, Jing Shi · Expert Systems with Applications 249, 123559 (2024) · NIST 지원",
+    venue: "ESWA 2024", evType: "체계적 리뷰",
+    why: "장비 상태·공정 변수로 제품 품질을 예측하는 가상 계측은 장비 데이터를 AI 판단에 쓰는 가장 오래된 시도입니다. 이 리뷰는 20여 년의 문헌을 모은 뒤에도 VM을 아직 초기 단계로 진단해, 장비 데이터 기반 AI의 현실을 보여 줍니다.",
+    summary: "서브 5nm 시대 APC의 핵심 도구인 가상 계측(VM) 연구를 반도체 제조 관점에서 처음 체계적으로 리뷰했다고 밝힙니다. 범용 VM 아키텍처와 요구사항을 제시하고, 주요 공정별 최신 VM 예측 연구의 기여를 비교·정리한 뒤, 확산을 막는 과제와 향후 전망을 분석합니다.",
+    stages: ["20여 년 문헌|수집", "범용 VM|아키텍처·요구사항", "공정별 VM 연구|비교", "확산 장애 요인|분석", "향후 전망"],
+    results: "VM은 장비 상태·공정 변수와 샘플링된 실측값으로 제품 품질을 예측해 실측을 보조하는 도구로 정리됩니다. 새로운 알고리즘이 늘면서 예측 정확도 과제를 극복하기 위해 계속 발전 중이라고 평가합니다.",
+    limit: "저자들의 결론은 VM이 아직 초기 단계이며, 반도체 산업에서 더 넓게 구현되고 수용되는 것을 막는 상당한 장애물이 있다는 것입니다(세부 장애 항목은 원문 5장 확인 필요). 다른 VM 체계적 리뷰(Int. J. Production Research, 2021)도 식각 챔버의 잔류물 퇴적 같은 개념 드리프트를 VM을 오래 유지하기 위한 필수 고려사항으로 꼽습니다.",
+    caption: "문헌 정리 → 아키텍처 → 공정별 비교 → 확산 장애 분석의 리뷰 구조"
+  },
+
+  /* ---------- 반도체 장비 SW 도입 사례 ---------- */
+  lam: {
+    theme: "semi", short: "Lam Research 인간–기계 협업", sub: "Human first, computer last",
+    title: "Human–machine collaboration for improving semiconductor process development",
+    date: "2023-03", arxivId: null,
+    url: "https://doi.org/10.1038/s41586-023-05773-7",
+    meta: "Kanarik et al. (Lam Research) · Nature 616(7958), 707–711 (2023)",
+    venue: "Nature 2023", evType: "통제 실험 (가상 공정 게임)",
+    why: "장비 제조사가 AI를 공정 개발에 넣으려 했을 때 무엇이 통했고 무엇이 안 됐는지를 Nature에 정량적으로 보고한 대표 도입 사례입니다. 문화적 과제까지 명시합니다.",
+    summary: "고종횡비 SiO2 홀의 단일 단계 플라즈마 식각을 기존 데이터로 보정한 가상 공정 시뮬레이터에서, 숙련 엔지니어와 베이지안 최적화 알고리즘이 레시피 개발 비용(목표 도달까지 필요한 데이터 비용)을 겨루는 통제 실험을 설계했습니다.",
+    stages: ["보정된 가상|공정 시뮬레이터", "엔지니어|초기 탐색", "목표 공차 근처|알고리즘 인계", "비용-대-목표|비교"],
+    results: "사람 엔지니어는 개발 초기 단계에서 뛰어났고, 알고리즘은 목표의 좁은 공차 근처에서 훨씬 비용 효율적이었습니다. 숙련자가 먼저 탐색하고 알고리즘이 마무리하는 'human first–computer last' 전략은 사람 단독 대비 비용-대-목표를 절반으로 줄였습니다.",
+    limit: "실험 데이터 취득 비용이 높아 원자 수준 정확도의 예측 모델을 만들기 어렵고, 알고리즘 단독으로는 초기 탐색에서 약했습니다. 저자들은 AI 도입 시 사람과 컴퓨터를 협업시키는 데 따르는 문화적 과제도 해결해야 한다고 강조합니다.",
+    caption: "사람과 알고리즘이 개발 단계별로 역할을 나누는 하이브리드 구조"
+  },
+  agents4plc: {
+    theme: "semi", short: "Agents4PLC", sub: "PLC 코드 생성 + 검증 루프",
+    title: "Agents4PLC: Automating Closed-loop PLC Code Generation and Verification in Industrial Control Systems using LLM-based Agents",
+    date: "2024-10", arxivId: "2410.14209",
+    meta: "Zihan Liu, Ruinan Zeng, Dongxia Wang 외 · arXiv 2410.14209",
+    venue: "arXiv 2024", evType: "방법론 + 벤치마크",
+    why: "장비 제어 SW의 핵심인 PLC 코드에 LLM을 쓰되, 생성물을 그대로 믿지 않고 컴파일·검증을 강제하는 구조입니다. 선행 연구 LLM4PLC(문법 검사 MATIEC, 모델 체커 NuXmv)와의 계보도 보여 줍니다.",
+    summary: "IEC 61131-3 PLC 코드 생성과 코드 수준 검증을 LLM 멀티에이전트로 자동화합니다. 자연어 요구사항에서 사람이 작성·검증한 형식 명세와 참조 PLC 코드로 이어지는 검증 가능한 벤치마크도 함께 구축했습니다.",
+    stages: ["자연어|요구사항", "LLM|코드 생성", "컴파일·|문법 검증", "형식 검증·|테스트", "디버깅|피드백 루프"],
+    results: "저자들은 설계 수준이 아닌 코드 수준 검증을 강조해 LLM4PLC 같은 순수 LLM 접근을 넘어섰다고 보고합니다. 블랙박스·화이트박스 생성 모델을 모두 붙일 수 있고, 컴파일·테스트·검증·디버깅 도구를 연결합니다.",
+    limit: "출발점이 한계 자체입니다. LLM은 자동 코드 생성에서 진전을 보였지만 정합성 보장이 부족하고 PLC 프로그래밍에 대한 특화 지원이 약하다는 것입니다. 그래서 검증 루프가 선택이 아니라 필수가 됩니다.",
+    caption: "LLM이 생성하고, 컴파일러와 형식 검증이 통과 여부를 결정하는 폐루프"
+  },
+  infineon: {
+    theme: "semi", short: "Infineon FA 플래닝 에이전트", sub: "사내 인프라 PoC 배포",
+    title: "Intelligent Assistants for the Semiconductor Failure Analysis with LLM-Based Planning Agents",
+    date: "2025-06", arxivId: "2506.15567",
+    meta: "Aline Dobrovsky (UniBw München), Konstantin Schekotihin (Univ. Klagenfurt), Christian Burmer (Infineon) · ISTFA 2025 · arXiv 2506.15567",
+    venue: "ISTFA 2025 (Infineon)", evType: "산업 PoC 배포",
+    why: "반도체 제조사 내부 인프라에 LLM 에이전트를 실제로 배포한 사례입니다. 개별 AI 모델이 늘어날수록 생기는 오케스트레이션 문제를 출발점으로 삼은 점이 장비 운영 SW 관점과 맞닿아 있습니다.",
+    summary: "FA 랩에는 이미지 이상 검출, 유사 사례 검색, 리포트 생성 등 AI 컴포넌트가 늘고 있습니다. 이를 LLM 기반 플래닝 에이전트로 묶어, 복잡한 질의 처리, 외부 시스템 데이터 검색, 사람이 읽을 수 있는 응답 생성을 자율 수행하도록 설계했습니다.",
+    stages: ["FA 질의|입력", "ReAct·|온라인 재계획", "외부 도구·|데이터 검색", "사람이 읽는|응답 생성"],
+    results: "완전히 동작하는 PoC 에이전트를 Infineon IT 인프라 안에 구현·배포했고, 저자 평가에서 FA 업무 지원의 운영 효과성과 신뢰성을 확인했습니다.",
+    limit: "배포된 AI 모델 수가 늘수록 이를 FA 프로세스에 매끄럽게 통합된 워크플로로 엮는 것이 과제가 됩니다. 또한 범용 LLM은 FA처럼 도메인 지식이 결정적인 영역에서 성능이 제한적이라는 점을 명시합니다.",
+    caption: "흩어진 AI 컴포넌트를 플래닝 에이전트가 도구로 호출하는 오케스트레이션 구조"
+  },
+  semifa: {
+    theme: "semi", short: "SemiFA", sub: "SECS/GEM 텔레메트리 × VLM",
+    title: "SemiFA: An Agentic Multi-Modal Framework for Autonomous Semiconductor Failure Analysis Report Generation",
+    date: "2026-04", arxivId: "2604.13236",
+    meta: "Shivam Chand Kaushik · arXiv 2604.13236",
+    venue: "arXiv 2026", evType: "프로토타입 + 소규모 평가",
+    why: "SECS/GEM 장비 텔레메트리를 비전-언어 모델 파이프라인에 처음 넣었다고 주장하는 연구로, 장비 운영 데이터가 AI 판단의 1차 입력이 되는 구조를 보여 줍니다. 동시에 데이터 규모의 한계를 저자가 직접 밝힙니다.",
+    summary: "검사 이미지에서 구조화된 FA 리포트를 1분 안에 생성하는 4-에이전트 LangGraph 파이프라인입니다. 결함 서술, SECS/GEM 텔레메트리와 유사 결함 검색을 융합한 원인 분석, 심각도 분류, 공정 조정 제안을 차례로 수행합니다.",
+    stages: ["DefectDescriber|DINOv2 · LLaVA", "RootCauseAnalyzer|SECS/GEM + 검색", "SeverityClassifier|수율 영향", "RecipeAdvisor|공정 조정 제안", "PDF 리포트|생성"],
+    results: "검증 이미지 140장에서 분류 정확도 92.1%(macro F1 0.917), A100 GPU에서 리포트 생성 48초를 보고했습니다. GPT-4o 심사 기준으로 멀티모달 융합이 이미지 단독 대비 원인 추론 점수를 +0.86(5점 척도) 높였고, 장비 텔레메트리가 더 큰 기여를 했습니다.",
+    limit: "데이터셋 930건이 절차적 합성과 공개 웨이퍼맵(WM-811K, MixedWM38)에서 왔고, 검증은 140장과 LLM 심사에 의존합니다. 저자 스스로 7B VLM의 안정적 도메인 적응에는 실제 팹 이미지-리포트 쌍이 최소 5,000건 필요하다고 밝힙니다.",
+    caption: "장비 텔레메트리와 이미지를 에이전트들이 단계별로 융합하는 파이프라인"
+  }
+};
+
+const EDGES = [
+  { from: "kube",      to: "henkel",    kind: "lineage", note: "공저자(David Kube, Siemens) 공유 — 로봇 파운데이션 모델과 산업 에이전트 양쪽의 성숙도 진단" },
+  { from: "nsa",       to: "bbsimplex", kind: "lineage", note: "동일 연구 그룹(Stony Brook, Smolka·Stoller) — Simplex 런타임 보증 계보" },
+  { from: "kube",      to: "vlaind",    kind: "concept", note: "서베이의 성숙도 진단을 실물 실험이 수치로 확인" },
+  { from: "vlaind",    to: "so101",     kind: "concept", note: "VLA 실배치 한계 실측 — 산업 시나리오에서 저가 실물 플랫폼으로" },
+  { from: "so101",     to: "jparc",     kind: "concept", note: "실행 불안정을 관절 단위 물리 결함으로 분해" },
+  { from: "jparc",     to: "bbsimplex", kind: "concept", note: "동결된 학습 정책 위에 보정·감시 레이어를 얹는 구조" },
+  { from: "brunke",    to: "bbsimplex", kind: "concept", note: "학습 기반 제어의 안전 인증 문제의식" },
+  { from: "agents4plc",to: "nsa",       kind: "concept", note: "학습 모델 출력에 최종 권한을 주지 않고 검증 레이어를 통과시킴" },
+  { from: "henkel",    to: "infineon",  kind: "concept", note: "산업 에이전트의 실제 용도 — 지원·분석 업무 중심" },
+  { from: "infineon",  to: "semifa",    kind: "concept", note: "반도체 FA 에이전트 — 사내 배포 PoC와 공개 데이터 프로토타입" },
+  { from: "lam",       to: "vmreview",  kind: "concept", note: "공정 데이터 기반 예측의 한계 — 데이터 취득 비용과 실측 대체의 어려움" },
+  { from: "iad",       to: "semifa",    kind: "concept", note: "검사 이미지 기반 판단의 도메인 시프트 리스크" }
+];
+
+const MATRIX = [
+  { bn: "정밀도·실행 안정성", sub: "센티미터 오차, 실행 불안정",
+    ev: [["vlaind", "정밀 배치 오차 최대 2.2 cm·12.4°, 제로샷 파지 전원 실패"],
+         ["so101", "모든 정책에서 파지 불안정·반복 루프가 지배적 실패"],
+         ["kube", "최상위 모델도 정밀도 포함 기준의 일부만 충족"]],
+    resp: "절대 관절각 제어가 상대 엔드이펙터 제어보다 정밀 과제에 적합하다는 분석(VLA 산업 전이 연구), 실패 유형과 복구율을 별도 지표로 관리하는 평가 체계(SO-101)." },
+  { bn: "실시간성·연산 자원", sub: "추론 주기, 엣지 전력",
+    ev: [["vlaind", "대형 VLA 추론 주기 10 Hz 미만이 흔해 떨림·지연 발생"],
+         ["kube", "데스크톱 GPU가 중앙값 코봇의 2배 넘는 전력 소모"],
+         ["henkel", "추론 지연이 주요 한계로 반복 보고"]],
+    resp: "액션 청킹의 속도-정밀도 트레이드오프 관리, 경량 아키텍처와 동적 추론(VLA 산업 전이 연구의 관련 연구 정리), 엣지 하드웨어 사양을 모델 설계 단계에서 반영(Siemens 서베이)." },
+  { bn: "하드웨어 비이상성·열화", sub: "백래시, 지연, 마찰, 관절 결함",
+    ev: [["so101", "액추에이터 노이즈·백래시·지연·캘리브레이션 오차가 오차 누적"],
+         ["jparc", "실행 가능한 마찰 증가만으로도 성공률 하락, 결함 누적 시 회복 불가"]],
+    resp: "최근 관절 동역학에서 결함 상태를 추정해 동결 정책에 잔차를 더하는 보정 레이어(J-PARC). 오라클 결함 정보를 쓴 제약 역기구학만으로는 개선되지 않았다는 점이 중요합니다." },
+  { bn: "데이터 부족·드리프트", sub: "소량 데이터, 도메인 시프트",
+    ev: [["vlaind", "적응에 수백 개의 도메인 특화 에피소드 필요"],
+         ["iad", "도메인 시프트·저오탐 운영점에서 근거 제한적"],
+         ["semifa", "안정적 적응에 실제 팹 데이터 5,000쌍 이상 필요(저자 추정)"],
+         ["lam", "데이터 취득 비용으로 정밀 예측 모델 구축 어려움"],
+         ["vmreview", "20여 년 연구에도 가상 계측은 아직 초기 단계, 확산 장애 상당"]],
+    resp: "숙련자가 먼저 탐색하고 알고리즘이 마무리하는 분업(Lam Research), 보정된 가상 시뮬레이터로 실험 비용 절감(Lam Research), 합성 데이터 사전(산업 이상탐지 서베이)." },
+  { bn: "검증·안전 인증", sub: "정합성 보장, 런타임 보증",
+    ev: [["agents4plc", "LLM 생성 코드에 정합성 보장이 없음"],
+         ["bbsimplex", "강력한 제어기일수록 정적 검증이 어려움"],
+         ["brunke", "실환경 안전 보장과 공정 비교 벤치마크 부족"],
+         ["kube", "안전 게이팅·감사 가능한 배포 스택 필요"]],
+    resp: "컴파일러·형식 검증을 강제하는 생성 폐루프(Agents4PLC), 검증된 기준 제어기에 최종 권한을 주는 Simplex 구조와 온라인 재학습·역전환(Neural Simplex)." },
+  { bn: "통합·신뢰·조직", sub: "오케스트레이션, 문화",
+    ev: [["infineon", "AI 컴포넌트가 늘수록 워크플로 통합이 과제"],
+         ["henkel", "용도가 지원·모니터링에 편중, 할루시네이션·출력 불안정"],
+         ["lam", "사람과 AI 협업에 따른 문화적 과제 명시"]],
+    resp: "도구를 호출하는 플래닝 에이전트로 기존 AI 컴포넌트를 묶는 접근(Infineon), 사람 주도 하이브리드 전략(Lam Research)." }
+];
+
+/* =========================================================
+   공통 유틸
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function themeColor(t) { return `var(${THEMES[t].cssVar})`; }
+function svgText(parent, x, y, cls, str, style) {
+  const t = el("text", { x, y, "text-anchor": "middle", class: cls || "" }, parent);
+  if (style) t.setAttribute("style", style);
+  t.textContent = str;
+  return t;
+}
+function linkOf(p) { return p.arxivId ? `https://arxiv.org/abs/${p.arxivId}` : p.url; }
+function idLabel(p) { return p.arxivId ? `arXiv ${p.arxivId}` : p.venue; }
+
+function buildLegend(elId, withLines) {
+  const box = $(elId);
+  for (const key in THEMES) {
+    const s = document.createElement("span");
+    s.innerHTML = `<span class="sw" style="background:${themeColor(key)}"></span>${THEMES[key].label}`;
+    box.appendChild(s);
+  }
+  if (withLines) {
+    const a = document.createElement("span");
+    a.innerHTML = `<span class="ln"></span>동일 저자·연구 그룹 계보 (확인됨)`;
+    const b = document.createElement("span");
+    b.innerHTML = `<span class="ln dash"></span>주제·개념 연관 (편집상 판단)`;
+    box.appendChild(a); box.appendChild(b);
+  }
+}
+buildLegend("legend-theme", false);
+buildLegend("legend-time", false);
+buildLegend("legend-graph", true);
+
+/* =========================================================
+   탭 1: 테마 마인드맵
+   ========================================================= */
+const MM = {
+  center: { x: 620, y: 435 },
+  branches: {
+    exec:   { x: 620, y: 150 },
+    ready:  { x: 955, y: 245 },
+    assure: { x: 912, y: 578 },
+    data:   { x: 620, y: 705 },
+    semi:   { x: 332, y: 435 }
+  },
+  papers: {
+    vlaind:     { x: 290,  y: 70  },
+    so101:      { x: 620,  y: 58  },
+    jparc:      { x: 950,  y: 70  },
+    kube:       { x: 1120, y: 170 },
+    henkel:     { x: 1120, y: 330 },
+    brunke:     { x: 1120, y: 490 },
+    nsa:        { x: 1120, y: 610 },
+    bbsimplex:  { x: 1120, y: 730 },
+    iad:        { x: 380,  y: 800 },
+    vmreview:   { x: 750,  y: 805 },
+    lam:        { x: 128,  y: 215 },
+    agents4plc: { x: 112,  y: 360 },
+    infineon:   { x: 112,  y: 510 },
+    semifa:     { x: 128,  y: 655 }
+  }
+};
+
+function makeNodeA11y(g, id, d) {
+  g.setAttribute("role", "button");
+  g.setAttribute("tabindex", "0");
+  g.setAttribute("data-paper", id);
+  g.setAttribute("aria-label", d.title + " — 상세 보기");
+}
+
+function buildMindmap() {
+  const svg = $("mindmap");
+  const CW = 222, CH = 68, BW = 196, BH = 52;
+  const count = {};
+  for (const id in PAPERS) count[PAPERS[id].theme] = (count[PAPERS[id].theme] || 0) + 1;
+
+  const eg = el("g", {}, svg);
+  for (const t in MM.branches) {
+    const b = MM.branches[t];
+    el("path", { d: `M${MM.center.x},${MM.center.y} C${(MM.center.x + b.x) / 2},${MM.center.y} ${(MM.center.x + b.x) / 2},${b.y} ${b.x},${b.y}`,
+      fill: "none", stroke: themeColor(t), "stroke-width": 2, opacity: 0.55 }, eg);
+  }
+  for (const id in MM.papers) {
+    const p = MM.papers[id], t = PAPERS[id].theme, b = MM.branches[t];
+    el("path", { d: `M${b.x},${b.y} C${(b.x + p.x) / 2},${b.y} ${(b.x + p.x) / 2},${p.y} ${p.x},${p.y}`,
+      fill: "none", stroke: themeColor(t), "stroke-width": 2, opacity: 0.55 }, eg);
+  }
+
+  const cg = el("g", {}, svg);
+  el("rect", { x: MM.center.x - 112, y: MM.center.y - 45, width: 224, height: 90, rx: 14,
+    style: "fill:var(--surface-1); stroke:var(--text-primary); stroke-width:2" }, cg);
+  svgText(cg, MM.center.x, MM.center.y - 7, "t-center", "Physical AI의 한계");
+  svgText(cg, MM.center.x, MM.center.y + 16, "t-center-sub", "반도체 제조 관점 · 논문 14편");
+
+  for (const t in MM.branches) {
+    const b = MM.branches[t];
+    const g = el("g", {}, svg);
+    el("rect", { x: b.x - BW / 2, y: b.y - BH / 2, width: BW, height: BH, rx: 12,
+      style: `fill:color-mix(in srgb, ${themeColor(t)} 14%, var(--surface-1)); stroke:${themeColor(t)}; stroke-width:1.5` }, g);
+    svgText(g, b.x, b.y - 4, "t-branch", THEMES[t].label);
+    svgText(g, b.x, b.y + 15, "t-meta", `논문 ${count[t]}편`);
+  }
+
+  for (const id in MM.papers) {
+    const p = MM.papers[id], d = PAPERS[id], t = d.theme;
+    const g = el("g", { class: "paper" }, svg);
+    makeNodeA11y(g, id, d);
+    el("rect", { x: p.x - CW / 2, y: p.y - CH / 2, width: CW, height: CH, rx: 12,
+      style: `fill:color-mix(in srgb, ${themeColor(t)} 7%, var(--surface-1)); stroke:${themeColor(t)}; stroke-width:1.5` }, g);
+    svgText(g, p.x, p.y - 12, "t-title", d.short);
+    svgText(g, p.x, p.y + 6, "t-sub", d.sub);
+    svgText(g, p.x, p.y + 23, "t-meta", d.date.slice(0, 4) + " · " + d.venue);
+  }
+}
+buildMindmap();
+
+/* =========================================================
+   탭 2: 타임라인
+   ========================================================= */
+const SORTED = Object.entries(PAPERS).sort((a, b) => a[1].date.localeCompare(b[1].date));
+
+function buildTimeline() {
+  const box = $("timeline");
+  let curYear = "";
+  for (const [id, d] of SORTED) {
+    const y = d.date.slice(0, 4);
+    if (y !== curYear) {
+      curYear = y;
+      const h = document.createElement("div");
+      h.className = "tl-year"; h.textContent = y + "년";
+      box.appendChild(h);
+    }
+    const btn = document.createElement("button");
+    btn.className = "tl-item";
+    btn.style.setProperty("--dot", themeColor(d.theme));
+    btn.dataset.paper = id;
+    btn.innerHTML = `<span class="m">${parseInt(d.date.slice(5, 7))}월</span>` +
+      `<span><span class="t">${d.short}</span> <span class="d">— ${d.sub}</span></span>` +
+      `<span class="v">${d.venue}</span>`;
+    box.appendChild(btn);
+  }
+}
+buildTimeline();
+
+/* =========================================================
+   탭 3: 연관성 그래프
+   ========================================================= */
+const RG = {
+  hulls: [
+    { theme: "exec",   x: 40,  y: 60,  w: 380, h: 250 },
+    { theme: "ready",  x: 660, y: 40,  w: 380, h: 160 },
+    { theme: "assure", x: 770, y: 230, w: 430, h: 180 },
+    { theme: "semi",   x: 60,  y: 380, w: 610, h: 330 },
+    { theme: "data",   x: 750, y: 470, w: 400, h: 200 }
+  ],
+  nodes: {
+    vlaind:     { x: 150,  y: 160 },
+    so101:      { x: 170,  y: 265 },
+    jparc:      { x: 340,  y: 210 },
+    kube:       { x: 760,  y: 120 },
+    henkel:     { x: 960,  y: 120 },
+    brunke:     { x: 860,  y: 350 },
+    nsa:        { x: 1000, y: 300 },
+    bbsimplex:  { x: 1120, y: 360 },
+    lam:        { x: 170,  y: 470 },
+    agents4plc: { x: 150,  y: 620 },
+    infineon:   { x: 400,  y: 480 },
+    semifa:     { x: 560,  y: 610 },
+    iad:        { x: 830,  y: 560 },
+    vmreview:   { x: 1040, y: 600 }
+  }
+};
+
+function buildGraph() {
+  const svg = $("relgraph");
+  const defs = el("defs", {}, svg);
+  const mk = el("marker", { id: "g-arrow", viewBox: "0 0 10 10", refX: 9, refY: 5,
+    markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 z", style: "fill:var(--text-muted)" }, mk);
+
+  for (const h of RG.hulls) {
+    const g = el("g", { style: "pointer-events:none" }, svg);
+    el("rect", { x: h.x, y: h.y, width: h.w, height: h.h, rx: 18,
+      style: `fill:color-mix(in srgb, ${themeColor(h.theme)} 6%, transparent); stroke:color-mix(in srgb, ${themeColor(h.theme)} 45%, transparent); stroke-width:1` }, g);
+    const t = svgText(g, h.x + 14, h.y + 22, "", THEMES[h.theme].label,
+      "font-size:12.5px; font-weight:700; fill:var(--text-secondary);");
+    t.setAttribute("text-anchor", "start");
+  }
+
+  const R = 13;
+  for (const e of EDGES) {
+    const a = RG.nodes[e.from], b = RG.nodes[e.to];
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+    const ux = dx / len, uy = dy / len;
+    const x1 = a.x + ux * (R + 4), y1 = a.y + uy * (R + 4);
+    const x2 = b.x - ux * (R + 10), y2 = b.y - uy * (R + 10);
+    const mx = (x1 + x2) / 2 - uy * 24, my = (y1 + y2) / 2 + ux * 24;
+    const solid = e.kind === "lineage";
+    const p = el("path", {
+      d: `M${x1},${y1} Q${mx},${my} ${x2},${y2}`, fill: "none",
+      stroke: solid ? "var(--text-secondary)" : "var(--text-muted)",
+      "stroke-width": solid ? 2.2 : 1.6, opacity: solid ? 0.9 : 0.65,
+      "marker-end": "url(#g-arrow)"
+    }, svg);
+    if (!solid) p.setAttribute("stroke-dasharray", "6 5");
+    const title = el("title", {}, p);
+    title.textContent = `${PAPERS[e.from].short} → ${PAPERS[e.to].short}: ${e.note}`;
+  }
+
+  for (const id in RG.nodes) {
+    const n = RG.nodes[id], d = PAPERS[id];
+    const g = el("g", { class: "gnode" }, svg);
+    makeNodeA11y(g, id, d);
+    el("circle", { cx: n.x, cy: n.y, r: 16, style: "fill:var(--surface-1)" }, g);
+    el("circle", { class: "core", cx: n.x, cy: n.y, r: 13,
+      style: `fill:color-mix(in srgb, ${themeColor(d.theme)} 30%, var(--surface-1)); stroke:${themeColor(d.theme)}; stroke-width:2.5` }, g);
+    svgText(g, n.x, n.y + 34, "", d.short, "font-size:13px; font-weight:650; fill:var(--text-primary);");
+    svgText(g, n.x, n.y + 50, "", d.date.slice(0, 4), "font-size:11px; fill:var(--text-muted);");
+    el("rect", { x: n.x - 85, y: n.y - 22, width: 170, height: 80, style: "fill:transparent; pointer-events:all" }, g);
+    const title = el("title", {}, g);
+    title.textContent = d.title;
+  }
+}
+buildGraph();
+
+/* =========================================================
+   탭 4: 병목 매트릭스
+   ========================================================= */
+function buildMatrix() {
+  const tb = $("mx-body");
+  for (const row of MATRIX) {
+    const tr = document.createElement("tr");
+    const ev = row.ev.map(([id, txt]) => {
+      const d = PAPERS[id];
+      return `<div class="ev-item"><button class="chip-btn" style="--tc:${themeColor(d.theme)}" data-paper="${id}">${d.short}</button>${txt}</div>`;
+    }).join("");
+    tr.innerHTML = `<td class="bn">${row.bn}<span>${row.sub}</span></td><td class="ev">${ev}</td><td>${row.resp}</td>`;
+    tb.appendChild(tr);
+  }
+}
+buildMatrix();
+
+/* =========================================================
+   목록 + 푸터
+   ========================================================= */
+function buildList() {
+  const box = $("paper-list");
+  for (const [id, d] of SORTED) {
+    const btn = document.createElement("button");
+    btn.className = "paper-row";
+    btn.style.setProperty("--bc", themeColor(d.theme));
+    btn.dataset.paper = id;
+    btn.innerHTML = `<span class="rt">${d.title}</span><span class="rm">${idLabel(d)} · ${d.venue}</span>`;
+    box.appendChild(btn);
+  }
+}
+buildList();
+$("foot-note").textContent =
+  "출처: 각 논문의 arXiv 초록·본문, 출판사 및 기관 저장소 페이지 (2026-10-11 확인). 인용 수는 최근 논문이 많아 비교 의미가 작아 기재하지 않았습니다. " +
+  "'산업 이상탐지 동향' 서베이는 동료 심사 전 프리프린트이며, 가상 계측 리뷰는 초록과 서지 정보 기준으로 정리했습니다. " +
+  "연관성 그래프의 실선은 저자·연구 그룹 공유가 확인된 관계, 점선은 주제상 연관(편집상 판단)입니다. " +
+  "시장 규모 수치는 각 기관의 공개 요약(유료 리포트 본문 미확인)과 IFR 보도자료 기준이며, 골드만삭스 2026년 상향치는 2차 보도 기준입니다.";
+
+/* =========================================================
+   흐름 다이어그램 (단계 → 단계, 3열 줄바꿈)
+   ========================================================= */
+function flowDiagram(stages, colorVar) {
+  const n = stages.length, cols = 3;
+  const rows = Math.ceil(n / cols);
+  const W = 760, boxW = 200, boxH = 60, gapX = (W - cols * boxW) / (cols + 1), rowH = 104;
+  const H = rows * rowH + 16;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "연구 구조: " + stages.map(s => s.replace("|", " ")).join(" → "));
+  const defs = el("defs", {}, svg);
+  const mk = el("marker", { id: "flow-arrow", viewBox: "0 0 10 10", refX: 8, refY: 5,
+    markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 z", fill: `var(${colorVar})` }, mk);
+
+  const pos = stages.map((s, i) => {
+    const r = Math.floor(i / cols), c = i % cols;
+    return { x: gapX + c * (boxW + gapX), y: 16 + r * rowH, r, c };
+  });
+  for (let i = 0; i < n - 1; i++) {
+    const a = pos[i], b = pos[i + 1];
+    let d;
+    if (a.r === b.r) {
+      d = `M${a.x + boxW + 4},${a.y + boxH / 2} L${b.x - 6},${b.y + boxH / 2}`;
+    } else {
+      const midY = a.y + boxH + (rowH - boxH) / 2;
+      d = `M${a.x + boxW / 2},${a.y + boxH + 3} L${a.x + boxW / 2},${midY} L${b.x + boxW / 2},${midY} L${b.x + boxW / 2},${b.y - 6}`;
+    }
+    el("path", { d, fill: "none", stroke: `var(${colorVar})`, "stroke-width": 2, opacity: 0.75, "marker-end": "url(#flow-arrow)" }, svg);
+  }
+  pos.forEach((p, i) => {
+    const lines = stages[i].split("|");
+    const g = el("g", {}, svg);
+    el("rect", { x: p.x, y: p.y, width: boxW, height: boxH, rx: 10,
+      fill: `color-mix(in srgb, var(${colorVar}) 8%, var(--surface-1))`, stroke: `var(${colorVar})`, "stroke-width": 1.5 }, g);
+    lines.forEach((ln, j) => {
+      svgText(g, p.x + boxW / 2 + 6, p.y + boxH / 2 + (j - (lines.length - 1) / 2) * 17 + 4.5, "", ln,
+        `font-size:${j === 0 ? 13 : 11.5}px; font-weight:${j === 0 ? 650 : 400}; fill:var(${j === 0 ? "--text-primary" : "--text-secondary"});`);
+    });
+    el("circle", { cx: p.x + 1, cy: p.y + 1, r: 11, fill: `var(${colorVar})` }, g);
+    svgText(g, p.x + 1, p.y + 5, "", String(i + 1), "font-size:11px; font-weight:700; fill:#ffffff;");
+  });
+  return svg;
+}
+
+/* =========================================================
+   모달
+   ========================================================= */
+const overlay = $("overlay");
+let lastFocus = null;
+
+function openPaper(id) {
+  const p = PAPERS[id];
+  if (!p) return;
+  const th = THEMES[p.theme];
+  $("m-dot").style.background = themeColor(p.theme);
+  $("m-branch").textContent = th.label;
+  $("m-title").textContent = p.title;
+  $("m-meta").textContent = p.meta;
+  const links = $("m-links");
+  links.innerHTML = "";
+  const mkLink = (href, label) => {
+    const a = document.createElement("a");
+    a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.textContent = label;
+    links.appendChild(a);
+  };
+  if (p.arxivId) {
+    mkLink(`https://arxiv.org/abs/${p.arxivId}`, "arXiv에서 원문 보기");
+    mkLink(`https://api.semanticscholar.org/arXiv:${p.arxivId}`, "Semantic Scholar에서 인용 확인");
+  } else {
+    mkLink(p.url, "원문 페이지 열기");
+  }
+  $("m-metric").innerHTML =
+    `게재: <b>${p.venue}</b> &nbsp;·&nbsp; 근거 유형: <b>${p.evType}</b>` +
+    `<div style="margin-top:6px">${p.why}</div>`;
+  $("m-summary").textContent = p.summary;
+  $("m-results").textContent = p.results;
+  $("m-caption").textContent = p.caption;
+  const lb = $("m-limit");
+  lb.textContent = p.limit;
+  lb.style.setProperty("--lc", themeColor(p.theme));
+  const holder = $("m-diagram");
+  holder.innerHTML = "";
+  holder.appendChild(flowDiagram(p.stages, th.cssVar));
+  lastFocus = document.activeElement;
+  overlay.classList.add("open");
+  $("m-close").focus();
+  document.body.style.overflow = "hidden";
+}
+function closeModal() {
+  overlay.classList.remove("open");
+  document.body.style.overflow = "";
+  if (lastFocus) lastFocus.focus();
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-paper]");
+  if (t) openPaper(t.dataset.paper);
+});
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.closest && e.target.closest("svg [data-paper]")) {
+    e.preventDefault();
+    openPaper(e.target.closest("[data-paper]").dataset.paper);
+  }
+  if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+});
+$("m-close").addEventListener("click", e => { e.stopPropagation(); closeModal(); });
+overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(); });
+
+/* =========================================================
+   탭 전환
+   ========================================================= */
+const tabBtns = Array.from(document.querySelectorAll(".tab-btn"));
+function selectTab(btn) {
+  tabBtns.forEach(b => b.setAttribute("aria-selected", b === btn ? "true" : "false"));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === btn.dataset.panel));
+}
+tabBtns.forEach((btn, i) => {
+  btn.addEventListener("click", () => selectTab(btn));
+  btn.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      const next = tabBtns[(i + (e.key === "ArrowRight" ? 1 : tabBtns.length - 1)) % tabBtns.length];
+      next.focus(); selectTab(next);
+    }
+  });
+});
+</script>
+</body>
+</html>
